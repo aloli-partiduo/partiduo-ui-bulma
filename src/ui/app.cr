@@ -80,7 +80,15 @@ require "./handlers/liberal/settings_handlers"
 require "./handlers/accounting/liberal_accounts_handlers"
 
 module PartiduoUi
-  VERSION = "0.1.0"
+  # Lue à la compilation dans `shard.yml`, seule source du numéro : chaque
+  # commit y incrémente le dernier chiffre.
+  VERSION = {{
+              (read_file("#{__DIR__}/../../shard.yml")
+                .lines
+                .find(&.starts_with?("version:")) || "version: 0.0.0")
+                .gsub(/^version:\s*/, "")
+                .chomp
+            }}
 
   # Application Marten de l'interface Bulma : ses gabarits (`templates/ui/`),
   # ses fichiers statiques (`assets/ui/`) et ses libellés d'écran (`locales/`).
