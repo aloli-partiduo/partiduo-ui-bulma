@@ -97,6 +97,14 @@ describe "Import et export du plan comptable (D-OUT-004, D-OUT-007)" do
     Partiduo::Api::Accounting.account(Books.system, "60799").label.should eq("Achats d'essai")
   end
 
+  it "lit un fichier séparé par des tabulations, choisies par leur nom" do
+    browser = Books.admin
+    page = browser.post("/accounting/chart/import", {"content_text" => "60797\tAchats tabulés\t6\tCHA\n", "separator" => "tab",
+                                                     "step" => "preview"}).html
+    page.should contain(%(<option value="tab" selected>Tabulation</option>))
+    page.should contain("À créer : 1 · à mettre à jour : 0 · refusées : 0")
+  end
+
   it "exporte le plan au format de l'import" do
     browser = Books.admin
     response = browser.get("/accounting/chart/export")

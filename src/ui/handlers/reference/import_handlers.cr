@@ -19,8 +19,10 @@ module PartiduoUi
     # Lignes acceptées montrées dans l'aperçu ; les refusées le sont toutes.
     SHOWN_ROWS = 100
 
-    SEPARATORS = {";" => "semicolon", "," => "comma", "\t" => "tab", "|" => "pipe"}
-    QUOTES     = {"\"" => "double", "'" => "single"}
+    # Valeurs des listes : noms (une tabulation ne survit pas sûrement dans
+    # un attribut HTML) ; un caractère envoyé tel quel est aussi accepté.
+    SEPARATORS = {"semicolon" => ';', "comma" => ',', "tab" => '\t', "pipe" => '|'}
+    QUOTES     = {"double" => '"', "single" => '\''}
 
     # Colonne du fichier : numéro, champ associé (liste), exemple de valeur.
     class ColumnChoice
@@ -107,10 +109,11 @@ module PartiduoUi
     # --- Formulaire des options -------------------------------------------------
 
     def options_form : Form
-      separators = SEPARATORS.map { |value, key| option(value, I18n.t("ui.imports.separators.#{key}")) }
-      quotes = QUOTES.map { |value, key| option(value, I18n.t("ui.imports.quotes.#{key}")) }
+      separators = SEPARATORS.keys.map { |key| option(key, I18n.t("ui.imports.separators.#{key}")) }
+      quotes = QUOTES.keys.map { |key| option(key, I18n.t("ui.imports.quotes.#{key}")) }
       encodings = Core::CSV_ENCODINGS.map { |value| option(value, I18n.t("ui.imports.encodings.#{value.tr("-", "_")}")) }
-      separator = request.data.has_key?("separator") ? field("separator", strip: false) : ";"
+      separator = SEPARATORS.key_for?(separator_char) || "semicolon"
+      quote = QUOTES.key_for?(quote_char) || "double"
       Form.new([
         Form::Group.new(nil, own_fields + [
           Form::Field.new("content_text", I18n.t("ui.imports.paste"), "textarea", "", wide: true,
@@ -118,7 +121,7 @@ module PartiduoUi
         ]),
         Form::Group.new(I18n.t("ui.imports.format"), [
           Form::Field.new("separator", I18n.t("ui.imports.separator"), "select", separator, options: separators),
-          Form::Field.new("quote", I18n.t("ui.imports.quote"), "select", field("quote").presence || "\"", options: quotes),
+          Form::Field.new("quote", I18n.t("ui.imports.quote"), "select", quote, options: quotes),
           Form::Field.new("encoding", I18n.t("ui.imports.encoding"), "select", field("encoding").presence || "utf-8",
             options: encodings),
           Form::Field.new("skip_rows", I18n.t("ui.imports.skip_rows"), value: field("skip_rows").presence || "0", mono: true,
@@ -153,16 +156,24 @@ module PartiduoUi
     end
 
     private def read_format(form : Form) : Core::CsvFormat?
-      separator = field("separator", strip: false).presence || ";"
-      quote = field("quote").presence || "\""
       skip = field("skip_rows").presence || "0"
       rows = skip.to_i?
       if rows.nil? || rows < 0
         form.add_error("skip_rows", I18n.t("ui.forms.invalid_integer"))
         return
       end
-      Core::CsvFormat.new(separator: separator[0], quote: quote[0], encoding: field("encoding").presence || "utf-8",
+      Core::CsvFormat.new(separator: separator_char, quote: quote_char, encoding: field("encoding").presence || "utf-8",
         skip_rows: rows)
+    end
+
+    private def separator_char : Char
+      value = field("separator", strip: false)
+      SEPARATORS[value]? || value[0]? || ';'
+    end
+
+    private def quote_char : Char
+      value = field("quote")
+      QUOTES[value]? || value[0]? || '"'
     end
 
     # Association choisie dans l'aperçu (`column-0`, `column-1`…) ; `nil`
