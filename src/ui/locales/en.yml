@@ -145,6 +145,13 @@ en:
       password_help: "A password is still possible. You can then add an authenticator app or a passkey."
       password_done: "Password saved. Sign in to continue."
       passkey_done: "Passkey saved. Sign in with it."
+    simple_mode:
+      simple: "Income and expenses"
+      full: "Accounting"
+      to_simple: "Switch to income and expenses"
+      to_full: "Switch to accounting"
+      help: "Income and expenses: a short menu and everyday words; Accounting: ledgers, entries and the chart of accounts. Your rights stay the same."
+      restricted: "This company file is shown as income and expenses."
     preferences:
       title: "Preferences"
       intro: "Your personal settings: saved with your account, they follow you from one device to another and change nothing for other users."

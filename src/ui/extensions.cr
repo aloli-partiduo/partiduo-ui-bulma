@@ -169,6 +169,42 @@ module PartiduoUi
       end
     end
 
+    # Variante du mode simplifié d'une extension (ADR-011 A2, ADR-007 D3) :
+    # menu réduit, vocabulaire, interfaces offertes, tuiles et menus de la
+    # Comptabilité écartés, sur le modèle de `SimpleMode::MENU` et
+    # `SimpleMode::LIBERAL_MENU`.
+    #
+    # ```
+    # PartiduoUi::Extensions.simple_mode "PERSO",
+    #   read: "perso.read",
+    #   menu: [
+    #     PartiduoUi::SimpleMode::Entry.new("DASHBOARD", "perso_ui.menu.dashboard"),
+    #     PartiduoUi::SimpleMode::Entry.new("PERSO_OPERATIONS", "perso_ui.menu.operations"),
+    #   ],
+    #   labels: PartiduoUi::SimpleMode::Labels.under("perso_ui.mode"),
+    #   hidden_menus: PartiduoUi::SimpleMode::BUSINESS_ACCOUNTING_MENUS,
+    #   tiles: ->(actor : Partiduo::Api::Actor, fmt : PartiduoUi::Format) { Perso::Ui.tiles(actor, fmt) }
+    # ```
+    #
+    # La variante s'applique quand l'extension est active et que
+    # l'utilisateur a la permission `read` ; celles de `MICRO` et `LIBERAL`
+    # passent avant. L'interface appliquée suit toujours la préférence de
+    # l'utilisateur enregistrée par le cœur (D-UI-077) ; `offer` dit quelles
+    # interfaces sont offertes (par défaut les deux). `labels` : par défaut
+    # le vocabulaire commun « Recettes et dépenses » / « Comptabilité »
+    # (`ui.simple_mode.*`).
+    def self.simple_mode(code : String, read : String, menu : Array(SimpleMode::Entry),
+                         labels : SimpleMode::Labels = SimpleMode::Labels.under("ui.simple_mode"),
+                         offer : SimpleMode::Offer = ->(_role : String?, _active : Set(String)) { [SimpleMode::SIMPLE, SimpleMode::FULL] },
+                         hidden_menus : Array(String) = [] of String,
+                         tiles : SimpleMode::Tiles? = nil,
+                         settings_route : String? = nil, settings_permission : String? = nil,
+                         settings_label : String? = nil) : SimpleMode::Flavor
+      check_code!(code)
+      SimpleMode.register(SimpleMode::Flavor.new(code, read, menu, settings_route, settings_permission,
+        settings_label, labels: labels, offer: offer, hidden_menus: hidden_menus, tiles: tiles))
+    end
+
     # Action ou fichier qu'une extension ajoute à la fiche d'un document de
     # la Facturation (ADR-010 D4) : `kind` vaut `action` (bouton qui ouvre
     # un écran de l'extension) ou `file` (fichier produit par l'extension,

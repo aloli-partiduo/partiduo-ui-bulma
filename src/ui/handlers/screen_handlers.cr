@@ -12,11 +12,14 @@ module PartiduoUi
       # Mode simplifié (ADR-007 D3, D6) : tableau de bord de la
       # micro-entreprise (chiffre d'affaires, seuils, échéance URSSAF) ou de
       # la profession libérale (recettes, dépenses, résultat, 2035).
+      # Variante d'une extension (ADR-011 A2) : ses tuiles seulement.
       simple = SimpleMode.mode(request)
+      tiles = SimpleMode.applied_flavor(request).try(&.tiles)
       board = case simple
               when "MICRO"   then MicroDashboard.new(actor, fmt, active).build
               when "LIBERAL" then LiberalDashboard.new(actor, fmt, active).build
-              else                Dashboard.new(actor, fmt, active).build
+              else
+                tiles ? Dashboard.new(actor, fmt, active).build_simple(tiles.call(actor, fmt)) : Dashboard.new(actor, fmt, active).build
               end
       # Compteurs des extensions (justificatifs à traiter…), en tête de « À traiter ».
       counts = Extensions.counts(actor)

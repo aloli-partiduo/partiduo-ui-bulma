@@ -79,6 +79,14 @@ module PartiduoUi
       self
     end
 
+    # Tableau de bord simplifié de la variante d'une extension (ADR-011 A2) :
+    # ses tuiles seulement, sans dernières factures ni écritures ; « À
+    # traiter » reçoit, comme ailleurs, les compteurs et la sécurité.
+    def build_simple(tiles : Array(Tile)) : self
+      @tiles.concat(tiles)
+      self
+    end
+
     def listed_tiles : Array(Tile)?
       @tiles.empty? ? nil : @tiles
     end

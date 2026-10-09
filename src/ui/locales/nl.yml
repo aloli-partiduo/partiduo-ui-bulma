@@ -145,6 +145,13 @@ nl:
       password_help: "Een wachtwoord blijft mogelijk. Daarna kunt u een authenticatie-app of een toegangssleutel toevoegen."
       password_done: "Wachtwoord opgeslagen. Meld u aan om verder te gaan."
       passkey_done: "Toegangssleutel opgeslagen. Meld u ermee aan."
+    simple_mode:
+      simple: "Ontvangsten en uitgaven"
+      full: "Boekhouding"
+      to_simple: "Naar ontvangsten en uitgaven"
+      to_full: "Naar de boekhouding"
+      help: "Ontvangsten en uitgaven: een kort menu en alledaagse woorden; Boekhouding: dagboeken, boekingen en het rekeningenstelsel. Uw rechten blijven dezelfde."
+      restricted: "Dit dossier wordt getoond als ontvangsten en uitgaven."
     preferences:
       title: "Voorkeuren"
       intro: "Uw persoonlijke instellingen: opgeslagen bij uw account, volgen ze u van het ene toestel naar het andere en veranderen ze niets voor de andere gebruikers."

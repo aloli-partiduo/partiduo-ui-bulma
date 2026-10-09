@@ -6,7 +6,8 @@ module PartiduoUi
   # D-AUTH-016), qui le suivent d'un appareil à l'autre et ne changent rien
   # pour les autres utilisateurs. Aujourd'hui : l'interface, « Recettes et
   # dépenses » ou « Comptabilité » (profession libérale), mode simplifié ou
-  # complet (comptable d'une micro-entreprise), selon `SimpleMode`.
+  # complet (comptable d'une micro-entreprise), ou celles de la variante
+  # d'une extension, selon `SimpleMode`.
   # Ouvertes à toute session authentifiée, comme la sécurité du compte.
   class PreferencesHandler < ReferenceHandler
     private def screen_access : Symbol
@@ -32,14 +33,13 @@ module PartiduoUi
       go(reverse("account_preferences"))
     end
 
-    # Liste des interfaces offertes, dans le vocabulaire du module (seulement
+    # Liste des interfaces offertes, dans le vocabulaire de la variante (seulement
     # quand il y a à choisir : plus d'une interface offerte).
     private def form(item : SimpleMode::Choice, value : String) : Form
       options = item.interfaces.map { |code| option(code, I18n.t(item.label_key(code))) }
-      help = item.flavor.module_code == SimpleMode::LIBERAL ? "liberal_help" : "micro_help"
       Form.new([Form::Group.new(nil, [
         Form::Field.new("interface", I18n.t("ui.preferences.interface"), "select", value, options: options,
-          help: I18n.t("ui.preferences.#{help}")),
+          help: I18n.t(item.flavor.labels.help)),
       ])])
     end
 
@@ -59,13 +59,10 @@ module PartiduoUi
       elsif !item.switchable?
         applied = I18n.t(item.label_key(item.applied))
         parts << I18n.t("ui.preferences.applied", interface: applied)
-        if item.flavor.module_code == SimpleMode::LIBERAL
-          parts << I18n.t("ui.preferences.liberal_inactive")
-          if item.preferences.interface != item.applied
-            parts << I18n.t("ui.preferences.kept", interface: I18n.t(item.label_key(item.preferences.interface)))
-          end
-        else
-          parts << I18n.t("ui.preferences.micro_member")
+        labels = item.flavor.labels
+        parts << I18n.t(labels.restricted)
+        if (kept = labels.kept) && item.preferences.interface != item.applied
+          parts << I18n.t(kept, interface: I18n.t(item.label_key(item.preferences.interface)))
         end
       elsif !item.preferences.interface_chosen
         parts << I18n.t("ui.preferences.role_default")

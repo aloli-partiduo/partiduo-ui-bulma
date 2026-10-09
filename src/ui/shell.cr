@@ -133,7 +133,9 @@ module PartiduoUi
       period = period_values(request, actor, format)
       simple_module = SimpleMode.mode(request)
       simple = !simple_module.nil?
-      menu = Partiduo::Api::Modules.menu(actor)
+      # Menus écartés par la variante du dossier, dans les deux interfaces
+      # (ADR-011 A2 : ni TVA, ni FEC, ni clôture pour un foyer).
+      menu = SimpleMode.without(Partiduo::Api::Modules.menu(actor), SimpleMode.hidden_menus(request))
       counts = Extensions.counts(actor)
       shell = new(
         sections: simple_module ? SimpleMode.sections(menu, request.path, counts, simple_module) : sections(menu, extension_codes(actor), request.path, counts),

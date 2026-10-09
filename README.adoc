@@ -350,6 +350,17 @@ montants dans la langue de l'utilisateur. DECISIONS D-HOOK-001.
 l'extension), `DocumentLink.new(label, url, "file")` un fichier produit à
 télécharger. Liste vide : pas de panneau. `document` est la
 `Partiduo::Api::Invoicing::DocumentView` de la fiche. DECISIONS D-HOOK-002.
+
+|`simple_mode(code, read:, menu:, labels:, offer:, hidden_menus:, tiles:, settings_…:)`
+|Variante du mode simplifié de l'extension (ADR-011 A2, DECISIONS
+D-FOY-002), sur le modèle de `SimpleMode::MENU` et `LIBERAL_MENU` : menu
+réduit (`SimpleMode::Entry`), vocabulaire (`SimpleMode::Labels`, par défaut
+« Recettes et dépenses » / « Comptabilité »), interfaces offertes (`offer`,
+les deux par défaut), tuiles de son tableau de bord simplifié, menus écartés
+dans les deux interfaces (`SimpleMode::BUSINESS_ACCOUNTING_MENUS` : TVA, FEC,
+clôture). Appliquée si l'extension est active et l'utilisateur a `read` ;
+`MICRO` et `LIBERAL` passent avant. L'interface suit la préférence de
+l'utilisateur enregistrée par le cœur (D-UI-077).
 |===
 
 [source,crystal]
@@ -362,6 +373,12 @@ end
 PartiduoUi::Extensions.document_links "SKEL" do |actor, document|
   [PartiduoUi::Extensions::DocumentLink.new(I18n.t("skel_ui.render"), "/ext/SKEL/documents/#{document.id}")]
 end
+
+PartiduoUi::Extensions.simple_mode "SKEL", read: "skel.page.view",
+  menu: [PartiduoUi::SimpleMode::Entry.new("DASHBOARD", "skel_ui.menu.home"),
+         PartiduoUi::SimpleMode::Entry.new("SKEL_HOME", "skel_ui.menu.pages")],
+  hidden_menus: PartiduoUi::SimpleMode::BUSINESS_ACCOUNTING_MENUS,
+  tiles: ->(actor : Partiduo::Api::Actor, fmt : PartiduoUi::Format) { Skel::Ui.tiles(actor, fmt) }
 ----
 
 Le panneau suit les règles de l'interface : titre `h2` relié au panneau

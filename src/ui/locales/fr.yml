@@ -145,6 +145,13 @@ fr:
       password_help: "Le mot de passe reste possible. Vous pourrez ensuite ajouter une application d'authentification ou une clé d'accès."
       password_done: "Mot de passe enregistré. Connectez-vous pour continuer."
       passkey_done: "Clé d'accès enregistrée. Connectez-vous avec elle."
+    simple_mode:
+      simple: "Recettes et dépenses"
+      full: "Comptabilité"
+      to_simple: "Passer aux recettes et dépenses"
+      to_full: "Passer à la comptabilité"
+      help: "Recettes et dépenses : un menu réduit et des mots de tous les jours ; Comptabilité : les journaux, les écritures et le plan comptable. Vos droits restent les mêmes."
+      restricted: "Ce dossier se présente en recettes et dépenses."
     preferences:
       title: "Préférences"
       intro: "Vos réglages personnels : enregistrés avec votre compte, ils vous suivent d'un appareil à l'autre et ne changent rien pour les autres utilisateurs."
