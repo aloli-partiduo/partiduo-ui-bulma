@@ -1,0 +1,76 @@
+{# SPDX-License-Identifier: AGPL-3.0-or-later. Import CSV (fiches, plan comptable ; D-OUT-007) : fichier ou contenu collé et format, puis aperçu à blanc (association des colonnes, suite de chaque ligne et motifs des refus), puis import confirmé. Le contenu lu repasse en champ caché d'une étape à l'autre. #}{% extend "ui/base.html" %}
+{% block title %}{{ title }}{% endblock title %}
+{% block crumbs %}{% include "ui/_crumbs.html" %}{% endblock crumbs %}
+{% block heading %}{{ title }}{% endblock heading %}
+{% block actions %}{% for action in actions %}{% include "ui/_action.html" %}{% endfor %}{% endblock actions %}
+{% block content %}
+{% if intro %}<p class="pd-muted mb-3">{{ intro }}</p>{% endif %}
+{% if done %}<div class="notification is-success is-light pd-message" role="status" id="pd-import-done">{{ summary }}</div>{% endif %}
+<form method="post" action="{{ form_action }}" class="pd-form" enctype="multipart/form-data" novalidate>
+  {% csrf_input %}
+  {% if form.base_errors %}<div class="notification is-danger is-light pd-alert" role="alert" id="pd-form-errors">{% include "ui/_icon.html" with name="triangle-alert" %}<div>{% for message in form.base_errors %}<p>{{ message }}</p>{% endfor %}</div></div>{% endif %}
+  {% if content %}<input type="hidden" name="content" value="{{ content }}">{% endif %}
+  <section class="pd-panel" aria-labelledby="pd-import-source">
+    <header><h2 id="pd-import-source">{% translate "ui.imports.source" %}</h2></header>
+    <div class="pd-body">
+    {% for group in form.groups %}
+    <fieldset class="pd-fieldset">
+      {% if group.legend %}<legend>{{ group.legend }}</legend>{% endif %}
+      <div class="pd-form-grid">{% for field in group.fields %}{% if field.type == "file" %}<div class="field pd-wide">
+        <label class="label" for="{{ field.id }}">{{ field.label }}</label>
+        <div class="control"><input class="input" type="file" id="{{ field.id }}" name="{{ field.name }}" accept=".csv,.txt,text/csv,text/plain"{% if field.help %} aria-describedby="{{ field.help_id }}"{% endif %}></div>
+        {% if field.help %}<p class="help" id="{{ field.help_id }}">{% if content %}{% translate "ui.imports.file_kept" %} {% endif %}{{ field.help }}</p>{% endif %}
+        {% include "ui/_errors.html" with messages=field.errors, id=field.error_id %}
+      </div>{% else %}{% include "ui/_field.html" %}{% endif %}{% endfor %}</div>
+    </fieldset>
+    {% endfor %}
+    <div class="pd-form-actions">
+      <button class="button is-primary pd-touch" type="submit" name="step" value="preview">{% translate "ui.imports.preview" %}</button>
+      {% if preview %}<button class="button pd-touch" type="submit" name="step" value="detect">{% translate "ui.imports.detect" %}</button>{% endif %}
+      <a href="{{ back_url }}">{% translate "ui.forms.cancel" %}</a>
+    </div>
+    </div>
+  </section>
+  {% if preview %}
+  <section class="pd-panel" aria-labelledby="pd-import-preview">
+    <header><h2 id="pd-import-preview">{% if done %}{% translate "ui.imports.report" %}{% else %}{% translate "ui.imports.preview_title" %}{% endif %}</h2></header>
+    <div class="pd-body">
+      <p role="status" id="pd-import-summary">{{ summary }}</p>
+      {% if hidden_note %}<p class="pd-muted">{{ hidden_note }}</p>{% endif %}
+    </div>
+    <input type="hidden" name="columns" value="{{ column_count }}">
+    <div class="pd-scroll">
+      <table class="table is-fullwidth is-narrow pd-table" id="pd-import-rows">
+        <caption class="is-sr-only">{% translate "ui.imports.preview_title" %}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{% translate "ui.imports.line" %}</th>
+            <th scope="col">{% translate "ui.imports.action" %}</th>
+            <th scope="col">{% translate "ui.imports.reference" %}</th>
+            {% for column in columns %}<th scope="col"><label class="is-sr-only" for="pd-f-{{ column.name }}">{{ column.label }}</label><div class="select is-small"><select id="pd-f-{{ column.name }}" name="{{ column.name }}" title="{{ column.label }}"{% if done %} disabled{% endif %}>{% for option in column.options %}<option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>{% endfor %}</select></div></th>{% endfor %}
+            <th scope="col">{% translate "ui.imports.reasons" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+          <tr>
+            <td class="pd-mono">{{ row.line }}</td>
+            <td><span class="tag is-light {{ row.tone }}">{{ row.action }}</span></td>
+            <td class="pd-mono">{{ row.reference }}</td>
+            {% for cell in row.cells %}<td>{{ cell }}</td>{% endfor %}
+            <td>{% for message in row.messages %}<p>{{ message }}</p>{% endfor %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if importable %}<div class="pd-body">
+      {% if skip_label %}<label class="checkbox pd-check" for="pd-f-skip_refused"><input type="checkbox" id="pd-f-skip_refused" name="skip_refused" value="1"> {{ skip_label }}</label>{% endif %}
+      <div class="pd-form-actions">
+        <button class="button is-primary pd-touch" type="submit" name="step" value="import">{% translate "ui.imports.import" %}</button>
+      </div>
+    </div>{% endif %}
+  </section>
+  {% endif %}
+</form>
+{% endblock content %}

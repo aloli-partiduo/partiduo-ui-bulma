@@ -308,10 +308,19 @@ module PartiduoUi
         new_url = "#{reverse("cards:new")}?#{URI::Params.encode({"for" => items ? "items" : "parties"})}"
         actions << link_action(items ? "ui.cards.new_item" : "ui.cards.new_party", new_url, "primary", "plus")
       end
+      import_action(category_id).try { |action| actions << action }
       intro = Partiduo::Api::Cards.count_cards(actor, card_query) > LIST_LIMIT ? I18n.t("ui.cards.truncated", count: LIST_LIMIT) : nil
       title = I18n.t(items ? "ui.cards.items" : "ui.cards.parties")
       list_page(title, table, [crumb("core.menu.reference")], items ? "ui.cards.csv_name_items" : "ui.cards.csv_name", actions, tabs(items),
         I18n.t("cards.menu.cards_list"), list_filters(items, categories, category_id, kinds, kind), intro, filter: false)
+    end
+
+    # Import CSV (D-OUT-007), dans la catégorie filtrée s'il y en a une.
+    private def import_action(category_id : Int64?) : Screen::Action?
+      return unless can?(Partiduo::Api::Cards::IMPORT_PERMISSION) && can?("cards.card.write")
+      url = reverse("cards:import")
+      url = "#{url}?#{URI::Params.encode({"category" => category_id.to_s})}" if category_id
+      link_action("ui.imports.import_cards", url, icon: "upload")
     end
 
     # `status` : actives (défaut), inactives, toutes.

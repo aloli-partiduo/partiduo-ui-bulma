@@ -51,6 +51,9 @@ CARDS_ROUTES = Marten::Routing::Map.draw do
   path "", PartiduoUi::CardsHandler, name: "index"
   path "/items", PartiduoUi::ItemsHandler, name: "items"
   path "/new", PartiduoUi::CardNewHandler, name: "new"
+  # Import CSV et export au format de l'import (D-OUT-003, D-OUT-007).
+  path "/import", PartiduoUi::CardImportHandler, name: "import"
+  path "/export", PartiduoUi::CardExportHandler, name: "export"
   path "/<id:int>", PartiduoUi::CardHandler, name: "show"
   path "/<id:int>/edit", PartiduoUi::CardEditHandler, name: "edit"
   path "/<id:int>/enable", PartiduoUi::CardEnableHandler, name: "enable"
@@ -79,6 +82,9 @@ end
 ACCOUNTING_ROUTES = Marten::Routing::Map.draw do
   path "/chart", PartiduoUi::ChartHandler, name: "chart"
   path "/chart/new", PartiduoUi::AccountNewHandler, name: "account_new"
+  # Import et export CSV du plan comptable (D-OUT-004, D-OUT-007).
+  path "/chart/import", PartiduoUi::ChartImportHandler, name: "chart_import"
+  path "/chart/export", PartiduoUi::ChartExportHandler, name: "chart_export"
   path "/chart/<id:int>", PartiduoUi::AccountShowHandler, name: "account"
   path "/chart/<id:int>/edit", PartiduoUi::AccountEditHandler, name: "account_edit"
   path "/chart/<id:int>/delete", PartiduoUi::AccountDeleteHandler, name: "account_delete"
@@ -87,6 +93,8 @@ ACCOUNTING_ROUTES = Marten::Routing::Map.draw do
   path "/ledgers/<id:int>", PartiduoUi::LedgerHandler, name: "ledger"
   path "/ledgers/<id:int>/edit", PartiduoUi::LedgerEditHandler, name: "ledger_edit"
   path "/ledgers/<id:int>/delete", PartiduoUi::LedgerDeleteHandler, name: "ledger_delete"
+  # Archive ZIP des pièces jointes d'une période (D-OUT-005).
+  path "/receipts", PartiduoUi::ReceiptsArchiveHandler, name: "receipts_archive"
   # Saisie (lot 2) : quatre formes, contrôle instantané, ajout de ligne.
   path "/entries/purchase", PartiduoUi::PurchaseEntryHandler, name: "entry_purchase"
   # Facture d'achat reçue hors plateforme, pièce jointe à côté (ADR-004 D9) ;

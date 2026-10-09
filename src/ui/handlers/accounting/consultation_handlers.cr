@@ -89,6 +89,7 @@ module PartiduoUi
         reverse("accounting:entries"), params, empty_message: I18n.t("ui.entries.list_empty"))
       actions = [] of Screen::Action
       actions << link_action("ui.entries.titles.misc", reverse("accounting:entry_misc"), "primary", "plus") if can?("accounting.entry.post")
+      actions << link_action("ui.receipts_archive.title", reverse("accounting:receipts_archive"), icon: "paperclip") if can?("core.attachment.read")
       intro = total > LIMIT ? I18n.t("ui.entries.truncated", count: LIMIT, total: total) : nil
       list_page(I18n.t("accounting.menu.acc_entries"), table, [crumb("core.menu.consult")], "ui.entries.csv_name", actions,
         filters: filters(from, to), intro: intro, filter: false)

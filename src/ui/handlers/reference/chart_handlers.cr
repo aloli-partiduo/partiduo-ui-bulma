@@ -130,6 +130,10 @@ module PartiduoUi
       classes.each { |code| tabs << Screen::Tab.new(I18n.t("ui.chart.class", class: code), tab_url(code), code == wanted) }
       actions = [] of Screen::Action
       actions << link_action("ui.chart.new", reverse("accounting:account_new"), "primary", "plus") if can?("accounting.account.write")
+      if can?(Partiduo::Api::Accounting::CHART_IMPORT_PERMISSION) && can?("accounting.account.write")
+        actions << link_action("ui.imports.import_chart", reverse("accounting:chart_import"), icon: "upload")
+      end
+      actions << link_action("ui.imports.export_chart", reverse("accounting:chart_export"), icon: "download")
       filters = search_filters(wanted.empty? ? [] of Form::Field : [Form::Field.new("class", "", "hidden", wanted)])
       list_page(I18n.t("accounting.menu.acc_chart"), table, crumbs[0, 1], "ui.chart.csv_name", actions, tabs,
         I18n.t("ui.chart.classes"), filters)
