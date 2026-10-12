@@ -91,6 +91,12 @@ module PartiduoUi
                 .chomp
             }}
 
+  # Types des favicons et du manifeste web (`assets/ui/brand/`) : absents des
+  # types par défaut de Crystal, et de la base du système sur certains hôtes.
+  # Marten sert les fichiers statiques d'après `MIME.from_filename`.
+  MIME.register(".ico", "image/x-icon")
+  MIME.register(".webmanifest", "application/manifest+json")
+
   # Application Marten de l'interface Bulma : ses gabarits (`templates/ui/`),
   # ses fichiers statiques (`assets/ui/`) et ses libellés d'écran (`locales/`).
   class App < Marten::App

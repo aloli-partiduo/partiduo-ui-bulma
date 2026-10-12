@@ -1,4 +1,4 @@
-{# SPDX-License-Identifier: AGPL-3.0-or-later. Mise en page des écrans d'authentification : carte centrée, sans menu. #}<!DOCTYPE html>
+{# SPDX-License-Identifier: AGPL-3.0-or-later. Mise en page des écrans d'authentification et d'erreur : logo et nom centrés en haut, carte centrée, sans menu. #}<!DOCTYPE html>
 <html lang="{{ locale }}">
   <head>
 {% include "ui/_head.html" %}
@@ -8,7 +8,6 @@
   <body class="pd-auth-body" hx-headers='{"X-CSRF-Token": "{% csrf_token %}"}'>
     <a class="pd-skip" href="#pd-main">{% translate "ui.shell.skip" %}</a>
     <header class="pd-auth-top">
-      <span class="pd-brand"><b>Partiduo</b><small>{% translate "ui.shell.tagline" %}</small></span>
       <form class="pd-lang" method="post" action="{% url 'language' %}">
         {% csrf_input %}
         <input type="hidden" name="next" value="{{ ui_path }}">
@@ -18,6 +17,7 @@
         </select></div>
         <button class="button" type="submit">{% translate "ui.shell.apply" %}</button>
       </form>
+      <div class="pd-auth-brand"><img class="pd-logo" src="{% asset 'ui/brand/logo.svg' %}" alt="" width="56" height="56"><b class="pd-name">Parti<span>duo</span></b><small>{% translate "ui.shell.tagline" %}</small></div>
     </header>
     <main class="pd-auth" id="pd-main" tabindex="-1">
       <div class="pd-auth-card" id="pd-content">

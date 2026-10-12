@@ -27,6 +27,12 @@ private def check_accessibility(html : String, path : String) : Nil
     (text.presence || match[1].includes?("aria-label=")).should be_truthy, "#{path} : bouton sans nom : #{match[0][0, 120]}"
   end
 
+  # Toute image a un texte de remplacement, vide si elle est décorative (le
+  # symbole de la marque, doublé du nom en texte).
+  html.scan(/<img\b([^>]*)>/) do |match|
+    match[1].should match(/\balt="/), "#{path} : image sans alt : <img#{match[1]}>"
+  end
+
   html.scan(/<svg\b([^>]*)>/) do |match|
     decorative = match[1].includes?(%(aria-hidden="true"))
     described = match[1].includes?(%(role="img")) && match[1].includes?("aria-label=")

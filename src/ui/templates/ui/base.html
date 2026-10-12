@@ -10,7 +10,7 @@
     <div class="pd-app{% if shell.simple %} pd-simple{% endif %}" id="pd-app">
       <header class="pd-top">
         <button class="button pd-burger" type="button" data-pd-menu-toggle aria-controls="pd-side" aria-expanded="true" aria-label="{% translate 'ui.shell.menu' %}">{% include "ui/_icon.html" with name="menu" %}</button>
-        <a class="pd-brand" href="{% url 'core:dashboard' %}"><b>Partiduo</b><small>{% translate "ui.shell.tagline" %}</small></a>
+        <a class="pd-brand" href="{% url 'core:dashboard' %}"><img class="pd-logo" src="{% asset 'ui/brand/favicon.svg' %}" alt="" width="32" height="32"><b class="pd-name">Parti<span>duo</span></b><small>{% translate "ui.shell.tagline" %}</small></a>
         <div class="pd-dossier">
           <strong>{{ shell.company_name|default:"—" }}</strong>
           {% if shell.company_detail %}<span>{{ shell.company_detail }}</span>{% endif %}
