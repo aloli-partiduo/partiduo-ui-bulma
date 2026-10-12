@@ -47,9 +47,8 @@ scripts/                 # opal-build, icon_sprite.cr, api_boundary.cr, CI
 
 * Crystal 1.19.1 ;
 * PostgreSQL 18, joint *par socket Unix* (`/tmp/.s.PGSQL.5432`) ;
-* le cœur à côté du dépôt (`../partiduo-app`) et les shards maison dans
-  `prod-crystal/` (`marten`, `authn`, `password-policy`, `totp`, `webauthn`,
-  `jose`), en dépendances `path:` (voir `shard.override.yml`) ;
+* le cœur (`aloli-partiduo/partiduo-app`) et les shards maison sont pris sur
+  GitHub ; pour les copies de travail locales, voir <<_développement_local>> ;
 * pour *recompiler* les écrans Opal seulement : Ruby ≥ 3.1 et Bundler. Ni npm
   ni Node ne sont utilisés.
 
@@ -68,6 +67,34 @@ crystal run src/server.cr          # http://demo.partiduo.localhost:8000/
 cœur. En production : `MARTEN_ENV=production`, `MARTEN_SECRET_KEY`,
 `MARTEN_ALLOWED_HOSTS`, puis `crystal run manage.cr -- collectassets` ; les
 fichiers collectés sont servis par Marten (`Marten::Middleware::AssetServing`).
+
+== Développement local
+
+`shard.yml` et `shard.lock` référencent les shards maison sur GitHub
+(`aloli-crystal/*` et `aloli-partiduo/*`), suivis par branche. Le verrou
+versionné ne contient aucune dépendance `path:` : les ports FreeBSD et la CI
+l'exigent.
+
+Pour travailler sur les copies de travail voisines (`../../prod-crystal/<nom>`
+et `../partiduo-<dépôt>`), lancer :
+
+[source,sh]
+----
+scripts/override-local.sh
+----
+
+Le script génère un `shard.override.yml` *local et non versionné* (ignoré par
+git), installe les shards, puis remet `shard.lock` à son état versionné.
+Une copie de travail absente reste prise sur GitHub.
+
+Pour régénérer le verrou versionné, supprimer d'abord l'override local :
+
+[source,sh]
+----
+rm -f shard.override.yml
+SKIP_MARTEN_CLI_PRECOMPILATION=1 shards update
+scripts/override-local.sh   # retour au mode local
+----
 
 == Specs
 
