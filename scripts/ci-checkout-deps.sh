@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # shard.yml référence le cœur (`../partiduo-app`) et les shards maison
-# (`../../<nom>`) en `path:` tant qu'ils ne sont pas publiés. En CI, on les
+# (`../../prod-crystal/<nom>`) en `path:` tant qu'ils ne sont pas publiés. En CI, on les
 # clone à ces emplacements, à côté du dépôt.
 set -eu
 
