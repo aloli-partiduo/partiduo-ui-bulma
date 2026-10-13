@@ -133,8 +133,9 @@ module PartiduoUi
       period = period_values(request, actor, format)
       simple_module = SimpleMode.mode(request)
       simple = !simple_module.nil?
-      # Menus écartés par la variante du dossier, dans les deux interfaces
-      # (ADR-011 A2 : ni TVA, ni FEC, ni clôture pour un foyer).
+      # Menus écartés par la variante et le type du dossier, dans les deux
+      # interfaces (ADR-011 A2 et A3 : ni achats, ni ventes, ni TVA, ni FEC,
+      # ni clôture pour un foyer).
       menu = SimpleMode.without(Partiduo::Api::Modules.menu(actor), SimpleMode.hidden_menus(request))
       counts = Extensions.counts(actor)
       shell = new(
@@ -143,7 +144,7 @@ module PartiduoUi
         company_detail: detail,
         user_name: session.full_name,
         user_email: session.email,
-        user_role_key: "auth.roles.#{session.role}",
+        user_role_key: FolderKind.role_key(request, session.role),
         locale: I18n.locale,
         locales: Locale.available,
         current_path: request.full_path,

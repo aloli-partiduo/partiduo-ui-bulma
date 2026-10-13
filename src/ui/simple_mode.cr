@@ -75,6 +75,19 @@ module PartiduoUi
     # (dossier foyer, ADR-011 D2).
     BUSINESS_ACCOUNTING_MENUS = %w[ACC_VAT_RETURN ACC_VAT_RETURNS ACC_VAT_SETTINGS ACC_FEC ACC_CLOSING]
 
+    # Menus écartés d'un dossier foyer (ADR-011 A3), avec ou sans variante :
+    # ceux de la TVA, du FEC et de la clôture, plus les saisies d'achat, de
+    # vente et de facture reçue, l'historique de la Facturation à
+    # comptabiliser et les taux de TVA. Restent les opérations financières
+    # et diverses, la consultation, le plan, les éditions et les prévisions.
+    # Une extension du foyer peut le reprendre dans sa variante.
+    HOUSEHOLD_MENUS = BUSINESS_ACCOUNTING_MENUS +
+                      %w[ACC_ENTRY_PURCHASE ACC_ENTRY_RECEIVED ACC_ENTRY_SALE ACC_INVOICING_HISTORY VAT_RATES]
+
+    # Menus écartés selon le type de dossier (`FolderKind`), quelle que soit
+    # la variante appliquée ; ils s'unissent à ceux de la variante.
+    KIND_HIDDEN_MENUS = {FolderKind::HOUSEHOLD => HOUSEHOLD_MENUS}
+
     # Vocabulaire d'une variante, en clés i18n : nom des deux interfaces
     # (`simple`, `full`), raccourcis du menu de l'utilisateur (`to_simple`,
     # `to_full`), aide du choix dans les préférences (`help`), phrase dite
@@ -266,10 +279,13 @@ module PartiduoUi
       offered.includes?(FULL) ? [SIMPLE, FULL] : [SIMPLE]
     end
 
-    # Menus écartés par la variante de la requête, dans les deux interfaces
-    # (`hidden_menus`) ; vide sans variante.
+    # Menus écartés de la requête, dans les deux interfaces : ceux de la
+    # variante (`hidden_menus`) et ceux du type de dossier
+    # (`KIND_HIDDEN_MENUS`, un foyer même sans variante) ; vide pour un
+    # dossier d'entreprise sans variante.
     def self.hidden_menus(request : Marten::HTTP::Request) : Set(String)
-      choice(request).try(&.flavor.hidden_menus.to_set) || Set(String).new
+      hidden = choice(request).try(&.flavor.hidden_menus.to_set) || Set(String).new
+      hidden.concat(KIND_HIDDEN_MENUS.fetch(FolderKind.of(request), [] of String))
     end
 
     # Menu de l'utilisateur sans les entrées écartées ; une rubrique dont il

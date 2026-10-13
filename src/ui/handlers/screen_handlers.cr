@@ -13,13 +13,22 @@ module PartiduoUi
       # micro-entreprise (chiffre d'affaires, seuils, échéance URSSAF) ou de
       # la profession libérale (recettes, dépenses, résultat, 2035).
       # Variante d'une extension (ADR-011 A2) : ses tuiles seulement.
+      # Dossier foyer sans tuiles de variante (ADR-011 A3) : tableau de bord
+      # du foyer (trésorerie, dépenses et recettes du mois, budget).
       simple = SimpleMode.mode(request)
       tiles = SimpleMode.applied_flavor(request).try(&.tiles)
       board = case simple
               when "MICRO"   then MicroDashboard.new(actor, fmt, active).build
               when "LIBERAL" then LiberalDashboard.new(actor, fmt, active).build
               else
-                tiles ? Dashboard.new(actor, fmt, active).build_simple(tiles.call(actor, fmt)) : Dashboard.new(actor, fmt, active).build
+                dashboard = Dashboard.new(actor, fmt, active)
+                if tiles
+                  dashboard.build_simple(tiles.call(actor, fmt))
+                elsif FolderKind.household?(request)
+                  dashboard.build_household
+                else
+                  dashboard.build
+                end
               end
       # Compteurs des extensions (justificatifs à traiter…), en tête de « À traiter ».
       counts = Extensions.counts(actor)

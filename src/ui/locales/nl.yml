@@ -37,6 +37,19 @@ nl:
       see_all: "Alles tonen"
       todo_title: "Te doen"
       nothing_todo: "Momenteel niets te doen."
+      household:
+        new_operation: "Nieuwe verrichting"
+        cash: "Thesaurie"
+        cash_line: "%{account}: %{amount}"
+        expenses: "Uitgaven · %{month}"
+        expenses_top: "Grootste post: %{account}"
+        income: "Inkomsten · %{month}"
+        income_balance: "Over na uitgaven: %{amount}"
+        budget: "Afwijking van het budget · %{month}"
+        budget_sub: "%{spent} uitgegeven voor %{planned} gepland (%{name})"
+        budget_over:
+          one: "%{count} post overschreden"
+          other: "%{count} posten overschreden"
       tiles:
         cash: "Thesaurie"
         cash_sub:
@@ -95,6 +108,9 @@ nl:
       modules_title: "Actieve modules"
       socle_only: "Geen module ingeschakeld: alleen de basis draait."
       secure: "Uw account bereikt het vereiste beveiligingsniveau."
+    household:
+      roles:
+        member: "Gezinslid"
     search:
       title: "Zoeken"
       query: "Zoekopdracht: „%{q}”"

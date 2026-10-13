@@ -59,6 +59,10 @@ module PartiduoUi
     getter invoices : Array(Row)? = nil
     getter entries : Array(Row)? = nil
     getter new_entry_url : String? = nil
+    # Libellé et classe Bulma du bouton de saisie : écriture d'achat
+    # (entreprise) ou opération financière en bouton principal (foyer).
+    getter new_entry_label = "ui.dashboard.new_entry"
+    getter new_entry_tone = ""
     getter new_invoice_url : String? = nil
 
     def initialize(@actor : Partiduo::Api::Actor, @fmt : Format, @active : Set(String), @today : Time = Partiduo::Api::Core.today)
@@ -75,6 +79,27 @@ module PartiduoUi
       end
       if @active.includes?("INVOICING") && @actor.can?("invoicing.invoice.write")
         @new_invoice_url = Marten.routes.reverse("invoicing:invoice_new")
+      end
+      self
+    end
+
+    # Tableau de bord d'un dossier foyer (ADR-011 A3), avec ou sans variante
+    # d'extension dans l'interface complète : trésorerie détaillée par compte
+    # financier, dépenses et recettes du mois (classes 6 et 7 du plan réduit),
+    # écart au budget du mois si une prévision le couvre, tuiles des
+    # extensions actives (lignes de relevé à traiter), dernières écritures.
+    # Ni clients, ni fournisseurs, ni TVA ; le bouton principal saisit une
+    # opération financière.
+    def build_household : self
+      if @active.includes?("ACCOUNTING")
+        household_accounting if @actor.can?("accounting.entry.read")
+        household_reports if @actor.can?(Acc::REPORT_READ)
+      end
+      @tiles.concat(Extensions.tiles(@actor, @fmt, @active))
+      if @active.includes?("ACCOUNTING") && @actor.can?("accounting.entry.post")
+        @new_entry_url = Marten.routes.reverse("accounting:entry_financial")
+        @new_entry_label = "ui.dashboard.household.new_operation"
+        @new_entry_tone = "is-primary"
       end
       self
     end
@@ -198,6 +223,107 @@ module PartiduoUi
           reverse("accounting:entry", id: entry.id))
       end
       @entries = rows.empty? ? nil : rows
+    end
+
+    # --- Foyer --------------------------------------------------------------------
+
+    ZERO = BigDecimal.new(0)
+
+    # Formule d'un poste de recette : son premier compte est de la classe 7
+    # (`[701]`, `[70%]`).
+    INCOME_FORMULA = /\A[^\[]*\[\s*7/
+
+    private def household_accounting : Nil
+      treasury_tile
+      latest_entries
+    rescue Partiduo::Api::AccessDenied
+      nil
+    end
+
+    private def household_reports : Nil
+      month_tiles
+      budget_tile
+    rescue Partiduo::Api::AccessDenied | Partiduo::Api::NotFound
+      nil
+    end
+
+    # Trésorerie du foyer : solde de chaque compte de la classe 5 utilisé en
+    # saisie (compte courant, livret, caisse…), hors virements internes
+    # (`58`, soldés par construction) ; le détail nomme les comptes non
+    # soldés.
+    private def treasury_tile : Nil
+      accounts = Acc.chart(@actor).map(&.account).select do |account|
+        account.direct_use && account.number.starts_with?('5') && !account.number.starts_with?("58")
+      end
+      return if accounts.empty?
+      balances = accounts.map do |account|
+        {account, Acc.account_statement(@actor, Acc::StatementQuery.new(account: account.number)).balance}
+      rescue Partiduo::Api::NotFound
+        {account, ZERO}
+      end
+      detail = balances.reject(&.[1].zero?).map do |account, balance|
+        I18n.t("ui.dashboard.household.cash_line", account: account.label, amount: @fmt.amount(balance))
+      end
+      @tiles << Tile.new("ACCOUNTING", I18n.t("ui.dashboard.household.cash"), @fmt.amount(balances.sum(ZERO, &.[1])),
+        sub: detail.join(" · ").presence, url: reverse("accounting:accounts"))
+    rescue Partiduo::Api::AccessDenied
+      nil
+    end
+
+    # Dépenses (classe 6, débit − crédit) et recettes (classe 7, crédit −
+    # débit) du mois en cours, par la balance générale du contrat.
+    private def month_tiles : Nil
+      from = Time.utc(@today.year, @today.month, 1)
+      to = from.shift(months: 1) - 1.day
+      view = Acc.trial_balance(@actor, Acc::TrialBalanceQuery.new(date_from: from, date_to: to, account_from: "6", account_to: "7"))
+      expenses = view.rows.select(&.number.starts_with?('6'))
+      income = view.rows.select(&.number.starts_with?('7'))
+      spent = expenses.sum(ZERO) { |row| row.debit - row.credit }
+      earned = income.sum(ZERO) { |row| row.credit - row.debit }
+      url = "#{reverse("accounting:trial_balance")}?#{URI::Params.encode({"from" => @fmt.date(from), "to" => @fmt.date(to), "account_from" => "6", "account_to" => "7"})}"
+      top = expenses.max_by? { |row| row.debit - row.credit }
+      top = nil unless top.try { |row| (row.debit - row.credit).positive? }
+      @tiles << Tile.new("ACCOUNTING", I18n.t("ui.dashboard.household.expenses", month: @fmt.month(@today)), @fmt.amount(spent),
+        sub: top.try { |row| I18n.t("ui.dashboard.household.expenses_top", account: row.label) }, url: url)
+      @tiles << Tile.new("ACCOUNTING", I18n.t("ui.dashboard.household.income", month: @fmt.month(@today)), @fmt.amount(earned),
+        sub: I18n.t("ui.dashboard.household.income_balance", amount: signed(earned - spent)), url: url)
+    end
+
+    # Écart au budget du mois : première prévision dont une période couvre
+    # le jour (`forecast_report`). Seuls comptent les postes de dépense :
+    # ceux dont la formule ne désigne pas d'abord un compte de recette
+    # (classe 7, `INCOME_FORMULA`) ; le réel d'une formule sans suffixe est
+    # un solde en valeur absolue, qui ne dit pas le sens. Écart positif :
+    # dépassement.
+    private def budget_tile : Nil
+      Acc.forecasts(@actor).each do |forecast|
+        next unless forecast.starts_on <= @today && @today <= forecast.ends_on
+        report = Acc.forecast_report(@actor, forecast.id)
+        index = report.periods.index { |period| period.starts_on <= @today && @today <= period.ends_on }
+        next if index.nil?
+        spent = planned = ZERO
+        over = 0
+        report.categories.each do |category|
+          category.items.each do |item|
+            next if item.formula.matches?(INCOME_FORMULA)
+            real = item.real[index]? || ZERO
+            estimated = item.estimated[index]? || ZERO
+            spent += real
+            planned += estimated
+            over += 1 if real > estimated
+          end
+        end
+        @tiles << Tile.new("ACCOUNTING", I18n.t("ui.dashboard.household.budget", month: @fmt.month(@today)), signed(spent - planned),
+          sub: I18n.t("ui.dashboard.household.budget_sub", spent: @fmt.amount(spent), planned: @fmt.amount(planned), name: forecast.name),
+          alert: over.zero? ? nil : I18n.t("ui.dashboard.household.budget_over", count: over),
+          url: reverse("accounting:forecast_report", id: forecast.id))
+        return
+      end
+    end
+
+    # Montant signé : `+` devant un montant positif.
+    private def signed(value : BigDecimal) : String
+      value.positive? ? "+#{@fmt.amount(value)}" : @fmt.amount(value)
     end
 
     # --- Facturation --------------------------------------------------------------

@@ -11,3 +11,9 @@ class Marten::HTTP::Request
   # `PartiduoUi::SimpleMode.choice`.
   property partiduo_interface_choice : (PartiduoUi::SimpleMode::Choice | Bool)? = nil
 end
+
+class Marten::HTTP::Request
+  # Type du dossier (`company`, `household`…, ADR-011 A3), lu une seule fois
+  # par `PartiduoUi::FolderKind.of`.
+  property partiduo_folder_kind : String? = nil
+end

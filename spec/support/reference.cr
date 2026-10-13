@@ -4,15 +4,21 @@ module PartiduoUi
   # Dossier provisionné par le contrat (`Api::Core.provision`) : société,
   # taux de TVA, catégories de fiches, plan comptable et journaux du régime.
   module Reference
-    def self.provision(regime : String = "fr", modules : Array(String) = [] of String) : Nil
-      settings = if regime == "be"
+    # `kind` : type de dossier (ADR-011 A3) ; un foyer porte un nom de foyer,
+    # sans SIREN ni TVA.
+    def self.provision(regime : String = "fr", modules : Array(String) = [] of String,
+                       kind : String = Partiduo::Api::InitialData::COMPANY) : Nil
+      settings = if kind == Partiduo::Api::InitialData::HOUSEHOLD
+                   Partiduo::Api::Core::SettingsInput.new(company_name: "Foyer Martin", tax_regime: regime,
+                     country_code: regime.upcase, domain: "demo.partiduo.localhost")
+                 elsif regime == "be"
                    Partiduo::Api::Core::SettingsInput.new(company_name: "Atelier Dupont SRL", tax_regime: "be",
                      country_code: "BE", vat_number: "BE0417497106", domain: "demo.partiduo.localhost")
                  else
                    Partiduo::Api::Core::SettingsInput.new(company_name: "Atelier Brunet SARL", tax_regime: "fr",
                      country_code: "FR", siren: "732 829 320", vat_number: "FR 44 732829320", domain: "demo.partiduo.localhost")
                  end
-      input = Partiduo::Api::Core::ProvisionInput.new(settings: settings, modules: modules)
+      input = Partiduo::Api::Core::ProvisionInput.new(settings: settings, modules: modules, kind: kind)
       result = Partiduo::Api::Core.provision(Partiduo::Api::Actor.system, input)
       raise "provisionnement refusé : #{result.error_keys.join(", ")}" if result.failure?
     end

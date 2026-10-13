@@ -1,7 +1,7 @@
 {# SPDX-License-Identifier: AGPL-3.0-or-later. Tableau de bord (maquette, ADR-005 D5) : tuiles fournies par chaque module actif (montants cliquables vers leur consultation), dernières factures et écritures, « À traiter » (relances, brouillons, échus, sécurité du compte), modules actifs. #}{% extend "ui/base.html" %}
 {% block title %}{% translate "core.menu.dashboard" %}{% endblock title %}
 {% block heading %}{% translate "core.menu.dashboard" %}{% endblock heading %}
-{% block actions %}{% if board.new_entry_url %}<a class="button pd-touch" href="{{ board.new_entry_url }}">{% include "ui/_icon.html" with name="notebook-pen" %}<span>{% translate "ui.dashboard.new_entry" %}</span></a>{% endif %}{% if board.new_invoice_url %}<a class="button is-primary pd-touch" href="{{ board.new_invoice_url }}">{% include "ui/_icon.html" with name="plus" %}<span>{% translate "invoicing.menu.inv_new_invoice" %}</span></a>{% endif %}{% endblock actions %}
+{% block actions %}{% if board.new_entry_url %}<a class="button pd-touch {{ board.new_entry_tone }}" href="{{ board.new_entry_url }}">{% include "ui/_icon.html" with name="notebook-pen" %}<span>{% translate board.new_entry_label %}</span></a>{% endif %}{% if board.new_invoice_url %}<a class="button is-primary pd-touch" href="{{ board.new_invoice_url }}">{% include "ui/_icon.html" with name="plus" %}<span>{% translate "invoicing.menu.inv_new_invoice" %}</span></a>{% endif %}{% endblock actions %}
 {% block content %}
 {% if suggest_passkey %}
 <div class="notification is-info is-light pd-callout" role="status">

@@ -37,6 +37,19 @@ en:
       see_all: "See all"
       todo_title: "To do"
       nothing_todo: "Nothing to do for now."
+      household:
+        new_operation: "New transaction"
+        cash: "Cash"
+        cash_line: "%{account}: %{amount}"
+        expenses: "Expenses · %{month}"
+        expenses_top: "Largest item: %{account}"
+        income: "Income · %{month}"
+        income_balance: "Left after expenses: %{amount}"
+        budget: "Budget variance · %{month}"
+        budget_sub: "Spent %{spent} against %{planned} planned (%{name})"
+        budget_over:
+          one: "%{count} item over budget"
+          other: "%{count} items over budget"
       tiles:
         cash: "Cash"
         cash_sub:
@@ -95,6 +108,9 @@ en:
       modules_title: "Active modules"
       socle_only: "No module enabled: only the base is running."
       secure: "Your account meets the required security level."
+    household:
+      roles:
+        member: "Household member"
     search:
       title: "Search"
       query: "Search: “%{q}”"

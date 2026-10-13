@@ -37,6 +37,19 @@ fr:
       see_all: "Tout voir"
       todo_title: "À traiter"
       nothing_todo: "Rien à traiter pour le moment."
+      household:
+        new_operation: "Nouvelle opération"
+        cash: "Trésorerie"
+        cash_line: "%{account} : %{amount}"
+        expenses: "Dépenses · %{month}"
+        expenses_top: "Premier poste : %{account}"
+        income: "Recettes · %{month}"
+        income_balance: "Reste après dépenses : %{amount}"
+        budget: "Écart au budget · %{month}"
+        budget_sub: "Dépensé %{spent} pour %{planned} prévus (%{name})"
+        budget_over:
+          one: "%{count} poste dépassé"
+          other: "%{count} postes dépassés"
       tiles:
         cash: "Trésorerie"
         cash_sub:
@@ -95,6 +108,9 @@ fr:
       modules_title: "Modules actifs"
       socle_only: "Aucun module activé : seul le socle est en service."
       secure: "Votre compte atteint le niveau de sécurité exigé."
+    household:
+      roles:
+        member: "Membre du foyer"
     search:
       title: "Recherche"
       query: "Recherche : « %{q} »"

@@ -37,7 +37,7 @@ module PartiduoUi
 
     def user_form(input : Auth::UserInput) : Form
       profiles = Auth.profiles(current.actor).map { |profile| option(profile.id.to_s, profile.name) }
-      roles = ROLES.map { |role| option(role, I18n.t("auth.roles.#{role}")) }
+      roles = ROLES.map { |role| option(role, I18n.t(FolderKind.role_key(request, role))) }
       locales = Locale.available.map { |code| option(code, I18n.t("core.settings.locales.#{code}")) }
       fields = [
         Form::Field.new("email", I18n.t("ui.users.email"), "email", input.email, required: true, wide: true, maxlength: 254),
@@ -102,7 +102,7 @@ module PartiduoUi
         Table::Row.new([
           Table::Cell.new(user.email, reverse("core:user", id: user.id)),
           Table::Cell.new(user.full_name),
-          Table::Cell.new(I18n.t("auth.roles.#{user.role}")),
+          Table::Cell.new(I18n.t(FolderKind.role_key(request, user.role))),
           Table::Cell.new(user.profile_id.try { |id| names[id]? } || ""),
           Table::Cell.new(user.last_login_at.try { |moment| fmt.datetime(moment, Time::Location::UTC) } || "",
             sort: user.last_login_at.try(&.to_s("%Y-%m-%dT%H:%M:%S")) || ""),
@@ -157,7 +157,7 @@ module PartiduoUi
         Screen::Item.new(I18n.t("ui.users.locale"), I18n.t("core.settings.locales.#{user.locale}")),
       ]
       access = [
-        Screen::Item.new(I18n.t("ui.users.role"), I18n.t("auth.roles.#{user.role}")),
+        Screen::Item.new(I18n.t("ui.users.role"), I18n.t(FolderKind.role_key(request, user.role))),
         Screen::Item.new(I18n.t("ui.users.profile"), user.profile_id.try { |id| names[id]? } || I18n.t("ui.users.no_profile"),
           user.profile_id.try { |id| can?(PROFILES) ? reverse("core:profile", id: id) : nil }),
         Screen::Item.new(I18n.t("ui.users.access_ends_on"), user.access_ends_on.try { |day| fmt.date(day) } || ""),
