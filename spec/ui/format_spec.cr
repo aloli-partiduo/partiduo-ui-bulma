@@ -97,6 +97,12 @@ describe PartiduoUi::Format do
     PartiduoUi::Format.new("en", "US").datetime(Time.utc(2026, 9, 27, 14, 5), Time::Location::UTC).should eq("09/27/2026 14:05")
   end
 
+  it "présente par défaut un horodatage dans le fuseau du dossier, pas en UTC" do
+    # 22 h 30 UTC le 12 octobre : 0 h 30 le 13 à Paris (fuseau par défaut).
+    Partiduo::Api::Core.time_zone.name.should eq("Europe/Paris")
+    PartiduoUi::Format.new("fr", "FR").datetime(Time.utc(2026, 10, 12, 22, 30)).should eq("13/10/2026 00:30")
+  end
+
   it "présente les dates ISO des messages du cœur selon la langue" do
     error = Partiduo::Api::FieldError.base("core.errors.period.overlap", {"starts_on" => "2026-01-01", "ends_on" => "2026-01-31"})
     with_locale("fr") do

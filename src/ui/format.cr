@@ -68,9 +68,10 @@ module PartiduoUi
       value.to_s(@convention.date)
     end
 
-    # Horodatage : date de la langue et heure `HH:MM`, dans la zone locale du
-    # serveur (les horodatages du cœur sont en UTC).
-    def datetime(value : Time?, location : Time::Location = Time::Location.local) : String
+    # Horodatage : date de la langue et heure `HH:MM`, dans le fuseau du
+    # dossier (`Partiduo::Api::Core.time_zone`, celui de l'instance) : les
+    # horodatages du cœur sont en UTC, et le serveur peut tourner en UTC.
+    def datetime(value : Time?, location : Time::Location = Partiduo::Api::Core.time_zone) : String
       return "" if value.nil?
       local = value.in(location)
       "#{date(local)} #{local.to_s("%H:%M")}"

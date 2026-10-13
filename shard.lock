@@ -62,7 +62,7 @@ shards:
 
   partiduo:
     git: https://github.com/aloli-partiduo/partiduo-app.git
-    version: 0.1.10+git.commit.ba07dd1ed8277c76176e8706a2d495d956494602
+    version: 0.1.12+git.commit.e8e98d0b6d358bcb291652c4205253e325dd00ce
 
   password-policy:
     git: https://github.com/aloli-crystal/password-policy.git
