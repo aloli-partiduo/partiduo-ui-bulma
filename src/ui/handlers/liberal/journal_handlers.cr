@@ -412,7 +412,7 @@ module PartiduoUi
       exercise = Liberal.year(current.actor, item.date.year)
       details << Screen::Item.new(I18n.t("ui.liberal.exercise.title"),
         "#{I18n.t("ui.liberal.exercise.label", year: exercise.year.to_s)} · #{exercise_status(exercise)}")
-      item.modified_at.try { |moment| details << Screen::Item.new(I18n.t("ui.liberal.line.modified_at"), fmt.date(moment)) }
+      item.modified_at.try { |moment| details << Screen::Item.new(I18n.t("ui.liberal.line.modified_at"), fmt.timestamp_date(moment)) }
       status = item.reversal? ? I18n.t("ui.liberal.line.reversal") : (item.reversed_by_id ? I18n.t("ui.liberal.line.cancelled") : nil)
       list = item.receipt? ? reverse("liberal:receipts") : reverse("liberal:expenses")
       crumbs = liberal_crumbs << Screen::Crumb.new(I18n.t("#{prefix}.title"), list)
@@ -423,7 +423,7 @@ module PartiduoUi
     # Ce que l'on peut faire de la ligne, et pourquoi.
     private def intro(item : Liberal::LineView, exercise : Liberal::YearView) : String
       year = exercise.year.to_s
-      date = exercise.frozen_at.try { |moment| fmt.date(moment) } || ""
+      date = exercise.frozen_at.try { |moment| fmt.timestamp_date(moment) } || ""
       if exercise.locked?
         I18n.t("ui.liberal.line.transmitted", year: year, date: date)
       elsif exercise.reopenable?

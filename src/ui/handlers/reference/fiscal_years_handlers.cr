@@ -24,7 +24,8 @@ module PartiduoUi
   class FiscalYearsHandler < FiscalYearScreen
     def get
       years = Partiduo::Api::Core.fiscal_years(current.actor)
-      next_year = (years.max_of?(&.year) || Time.local.year - 1) + 1
+      # Sans exercice : l'année du jour du dossier (son fuseau, pas celui du serveur).
+      next_year = (years.max_of?(&.year) || Partiduo::Api::Core.today.year - 1) + 1
       show(years, creation_form(year: next_year.to_s, start_year: next_year.to_s))
     end
 

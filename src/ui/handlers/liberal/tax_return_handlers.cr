@@ -75,7 +75,7 @@ module PartiduoUi
     # État de l'exercice en tête de la 2035 (D-LIB2-005, D-LIB5-001) :
     # ouvert, clôturé (par qui, réversible ou clos au socle), verrouillé.
     private def exercise_text(exercise : Liberal::YearView) : String
-      date = exercise.frozen_at.try { |moment| fmt.date(moment) } || ""
+      date = exercise.frozen_at.try { |moment| fmt.timestamp_date(moment) } || ""
       year = exercise.year.to_s
       if exercise.locked?
         I18n.t("ui.liberal.tax_return.exercise_locked", year: year, date: date)

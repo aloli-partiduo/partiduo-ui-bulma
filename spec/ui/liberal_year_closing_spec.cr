@@ -40,8 +40,9 @@ private def year_transmit(year : Int32) : Nil
   end
 end
 
+# Date du jour du dossier : celle du figement, présentée dans son fuseau.
 private def today_text : String
-  Time.utc.to_s("%d/%m/%Y")
+  Partiduo::Api::Core.today.to_s("%d/%m/%Y")
 end
 
 describe "Profession libérale — clôturer et rouvrir l'exercice (D-LIB5-001)" do

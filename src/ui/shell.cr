@@ -135,8 +135,10 @@ module PartiduoUi
       simple = !simple_module.nil?
       # Menus écartés par la variante et le type du dossier, dans les deux
       # interfaces (ADR-011 A2 et A3 : ni achats, ni ventes, ni TVA, ni FEC,
-      # ni clôture pour un foyer).
-      menu = SimpleMode.without(Partiduo::Api::Modules.menu(actor), SimpleMode.hidden_menus(request))
+      # ni clôture, ni balances des tiers pour un foyer), dans le vocabulaire
+      # du type (« Contacts », « Foyer »).
+      menu = FolderKind.relabel(SimpleMode.without(Partiduo::Api::Modules.menu(actor), SimpleMode.hidden_menus(request)),
+        FolderKind.of(request))
       counts = Extensions.counts(actor)
       shell = new(
         sections: simple_module ? SimpleMode.sections(menu, request.path, counts, simple_module) : sections(menu, extension_codes(actor), request.path, counts),

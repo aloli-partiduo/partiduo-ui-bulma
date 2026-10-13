@@ -35,13 +35,18 @@ private def march_operations : Nil
   Acc.post_financial(Books.system, input).value!
 end
 
-# Budget 2026 : alimentation 400 et salaires 3 000 par mois.
+# Budget 2026 : alimentation 400 et salaires 3 000 par mois ; un retrait
+# d'espèces de 150 déclaré recette (nature réglée, contrat 0.10.0) : le
+# tableau de bord ne le compte pas en dépense, quoique sa formule ne
+# désigne pas la classe 7.
 private def budget : Nil
   periods = Partiduo::Api::Core.fiscal_years(Books.system).find! { |year| year.year == 2026 }.periods
   forecast = Acc.create_forecast(Books.system, Acc::ForecastInput.new("Budget 2026", periods.first.id, periods.last.id)).value!
   category = Acc.create_forecast_category(Books.system, forecast.id, Acc::ForecastCategoryInput.new("Vie courante")).value!
   Acc.create_forecast_item(Books.system, category.id, Acc::ForecastItemInput.new("Alimentation", "[62]", Books.d("400"))).value!
   Acc.create_forecast_item(Books.system, category.id, Acc::ForecastItemInput.new("Salaires", "[701]", Books.d("3000"))).value!
+  Acc.create_forecast_item(Books.system, category.id, Acc::ForecastItemInput.new("Espèces", "[53]", Books.d("150"),
+    nature: Acc::FORECAST_INCOME)).value!
 end
 
 private def side_menu(html : String) : String
@@ -59,7 +64,12 @@ end
 # Routes des menus d'entreprise qu'un foyer ne présente pas.
 private BUSINESS_ROUTES = %w[accounting:entry_purchase accounting:entry_received accounting:entry_sale
   accounting:invoicing_history accounting:vat_return accounting:vat_returns accounting:vat_settings
-  accounting:fec accounting:closing vat:rates]
+  accounting:fec accounting:closing vat:rates accounting:auxiliary_balance accounting:aged_balance]
+
+# Libellé d'une entrée du menu latéral, d'après sa route.
+private def menu_label(menu : String, route : String) : String
+  menu.match(/#{Regex.escape(href(route))}[^>]*><span>([^<]+)<\/span>/).try(&.[1]) || fail "entrée #{route} absente"
+end
 
 describe "Dossier foyer (ADR-011 A3)" do
   it "écarte du menu les achats, les ventes, les factures reçues, la TVA, le FEC et la clôture" do
@@ -70,8 +80,34 @@ describe "Dossier foyer (ADR-011 A3)" do
     menu.should contain(href("accounting:entry_financial"))
     menu.should contain(href("accounting:entries"))
     menu.should contain(href("accounting:forecasts"))
+    menu.should contain(href("accounting:trial_balance"))
     # Présentation seulement : la route reste joignable.
     browser.get(Marten.routes.reverse("accounting:fec")).status.should eq(200)
+    browser.get(Marten.routes.reverse("accounting:aged_balance")).status.should eq(200)
+  end
+
+  it "dit « Contacts » et « Foyer » dans le menu, le titre et le fil d'Ariane, en fr, en et nl" do
+    browser = household_books
+    {"fr" => {"Contacts", "Foyer", "Modifier le foyer", "Foyer enregistré."},
+     "en" => {"Contacts", "Household", "Edit household", "Household saved."},
+     "nl" => {"Contacten", "Huishouden", "Huishouden wijzigen", "Huishouden opgeslagen."}}.each do |locale, (cards, company, edit, saved)|
+      browser.post("/language", {"locale" => locale, "next" => "/"})
+      I18n.with_locale(locale) do
+        menu = side_menu(browser.get("/").html)
+        menu_label(menu, "cards:index").should eq(cards)
+        menu_label(menu, "core:company").should eq(company)
+        {I18n.t("cards.menu.cards_list"), I18n.t("core.menu.core_company")}.each { |label| menu.should_not contain(">#{label}<") }
+        detail = browser.get(Marten.routes.reverse("core:company")).html
+        detail.should contain(%(<a href="#{Marten.routes.reverse("core:company")}">#{company}</a>))
+        detail.should contain(I18n.t("ui.household.company.intro"))
+        form = browser.get(Marten.routes.reverse("core:company_edit")).html
+        form.should contain(edit)
+        form.should_not contain(I18n.t("ui.company.edit"))
+        list = browser.get(Marten.routes.reverse("cards:index")).html
+        list.should contain(cards)
+        I18n.t(PartiduoUi::FolderKind.label_key("household", "ui.company.updated")).should eq(saved)
+      end
+    end
   end
 
   it "présente les tuiles et le bouton du foyer, sans tuile d'entreprise" do
@@ -108,7 +144,8 @@ describe "Dossier foyer (ADR-011 A3)" do
     income.value.should eq(fmt.amount(Books.d("3000")))
     income.sub.should eq("Reste après dépenses : +#{fmt.amount(Books.d("2550"))}")
 
-    # Seule l'alimentation compte (le salaire, classe 7, est une recette) : 450 pour 400.
+    # Seule l'alimentation compte (le salaire, classe 7, et les espèces, réglées
+    # en recette, n'en sont pas) : 450 pour 400.
     gap = tiles["Écart au budget · #{month}"]
     gap.value.should eq("+#{fmt.amount(Books.d("50"))}")
     gap.sub.should eq("Dépensé #{fmt.amount(Books.d("450"))} pour #{fmt.amount(Books.d("400"))} prévus (Budget 2026)")
@@ -176,6 +213,13 @@ describe "Dossier d'entreprise inchangé par le type foyer" do
     page.should contain("Utilisateur de la société")
     menu = side_menu(page)
     %w[accounting:entry_purchase accounting:entry_sale accounting:entry_received accounting:fec accounting:closing
-      accounting:vat_return].each { |route| menu.should contain(href(route)) }
+      accounting:vat_return accounting:auxiliary_balance accounting:aged_balance].each { |route| menu.should contain(href(route)) }
+    menu_label(menu, "cards:index").should eq("Tiers et articles")
+    menu_label(menu, "core:company").should eq("Société")
+    menu.should_not contain(">Contacts<")
+    detail = browser.get(Marten.routes.reverse("core:company")).html
+    detail.should contain(%(<a href="#{Marten.routes.reverse("core:company")}">Société</a>))
+    detail.should_not contain("Foyer")
+    browser.get(Marten.routes.reverse("core:company_edit")).html.should contain("Modifier la société")
   end
 end

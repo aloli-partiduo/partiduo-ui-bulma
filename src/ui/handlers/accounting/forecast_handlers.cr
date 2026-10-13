@@ -227,6 +227,7 @@ module PartiduoUi
       columns = [
         column("label", "ui.forecasts.label"),
         column("formula", "ui.forecasts.formula", "mono"),
+        column("nature", "ui.forecasts.nature", secondary: true),
         column("amount", "ui.forecasts.amount", "amount"),
         column("initial", "ui.forecasts.initial_amount", "amount", secondary: true),
         column("overrides", "ui.forecasts.period_amounts", "amount", secondary: true),
@@ -236,6 +237,7 @@ module PartiduoUi
         cells = [
           Table::Cell.new(item.label, writable ? reverse("accounting:forecast_item_edit", id: forecast_id, item_id: item.id) : nil),
           Table::Cell.new(item.formula),
+          Table::Cell.new(I18n.t("accounting.forecast_natures.#{item.nature}")),
           total_cell(item.amount),
           amount_cell(item.initial_amount),
           Table::Cell.new(item.period_amounts.empty? ? "" : item.period_amounts.size.to_s),
@@ -460,7 +462,7 @@ module PartiduoUi
       overrides = item.try(&.period_amounts.to_h { |row| {row.period_id, amount_text(row.amount)} }) || {} of Int64 => String
       position = item.try(&.position) || (category.items.max_of?(&.position) || 0) + 10
       show(build_form(item.try(&.label) || "", item.try(&.formula) || "", item.try { |value| amount_text(value.amount) } || "",
-        item.try { |value| amount_text(value.initial_amount) } || "", position.to_s, overrides))
+        item.try { |value| amount_text(value.initial_amount) } || "", position.to_s, overrides, item.try(&.nature) || ""))
     end
 
     def post
@@ -481,10 +483,13 @@ module PartiduoUi
         rows << Acc::ForecastPeriodAmountInput.new(period.id, value)
         sent << period.id
       end
-      form = build_form(field("label"), field("formula"), field("amount"), field("initial_amount"), field("position"), overrides)
+      form = build_form(field("label"), field("formula"), field("amount"), field("initial_amount"), field("position"), overrides,
+        field("nature"))
       return show(form_errors(form, errors)) unless errors.empty?
+      # Nature vide : déduite de la formule par le cœur (nouvel élément),
+      # gardée (élément existant).
       input = Acc::ForecastItemInput.new(label: field("label"), formula: field("formula"), amount: amount,
-        initial_amount: initial, position: position, period_amounts: rows)
+        initial_amount: initial, position: position, period_amounts: rows, nature: field("nature").presence)
       result = save(input)
       if result.success?
         flash["success"] = I18n.t("ui.forecasts.item_saved")
@@ -494,11 +499,15 @@ module PartiduoUi
     end
 
     private def build_form(label : String, formula : String, amount : String, initial : String, position : String,
-                           overrides : Hash(Int64, String)) : Form
+                           overrides : Hash(Int64, String), nature : String = "") : Form
+      natures = [option("", I18n.t("ui.forecasts.nature_auto"))] +
+                Acc::FORECAST_NATURES.map { |code| option(code, I18n.t("accounting.forecast_natures.#{code}")) }
       main = Form::Group.new(nil, [
         Form::Field.new("label", I18n.t("ui.forecasts.label"), value: label, required: true, maxlength: 255, wide: true),
         Form::Field.new("formula", I18n.t("ui.forecasts.formula"), value: formula, mono: true, wide: true,
           help: I18n.t("ui.forecasts.formula_help")),
+        Form::Field.new("nature", I18n.t("ui.forecasts.nature"), "select", nature, options: natures,
+          help: I18n.t("ui.forecasts.nature_help")),
         Form::Field.new("amount", I18n.t("ui.forecasts.amount"), "number", amount, mono: true, help: I18n.t("ui.forecasts.amount_help")),
         Form::Field.new("initial_amount", I18n.t("ui.forecasts.initial_amount"), "number", initial, mono: true,
           help: I18n.t("ui.forecasts.initial_amount_help")),

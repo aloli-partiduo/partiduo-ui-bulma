@@ -78,11 +78,14 @@ module PartiduoUi
     # Menus écartés d'un dossier foyer (ADR-011 A3), avec ou sans variante :
     # ceux de la TVA, du FEC et de la clôture, plus les saisies d'achat, de
     # vente et de facture reçue, l'historique de la Facturation à
-    # comptabiliser et les taux de TVA. Restent les opérations financières
-    # et diverses, la consultation, le plan, les éditions et les prévisions.
-    # Une extension du foyer peut le reprendre dans sa variante.
+    # comptabiliser, les taux de TVA, la balance des tiers et la balance
+    # âgée (comptes de clients et de fournisseurs, 13 octobre 2026). Restent
+    # les opérations financières et diverses, la consultation, le plan, les
+    # autres éditions et les prévisions. Une extension du foyer peut le
+    # reprendre dans sa variante.
     HOUSEHOLD_MENUS = BUSINESS_ACCOUNTING_MENUS +
-                      %w[ACC_ENTRY_PURCHASE ACC_ENTRY_RECEIVED ACC_ENTRY_SALE ACC_INVOICING_HISTORY VAT_RATES]
+                      %w[ACC_ENTRY_PURCHASE ACC_ENTRY_RECEIVED ACC_ENTRY_SALE ACC_INVOICING_HISTORY VAT_RATES
+                        ACC_AUXILIARY_BALANCE ACC_AGED_BALANCE]
 
     # Menus écartés selon le type de dossier (`FolderKind`), quelle que soit
     # la variante appliquée ; ils s'unissent à ceux de la variante.

@@ -163,7 +163,7 @@ module PartiduoUi
       rows = view.statements.map do |statement|
         Table::Row.new([
           Table::Cell.new(statement.reference, reverse("accounting:bank_statement", id: statement.id)),
-          Table::Cell.new(fmt.date(statement.created_at), sort: statement.created_at.to_s("%Y-%m-%dT%H:%M:%S")),
+          Table::Cell.new(fmt.timestamp_date(statement.created_at), sort: statement.created_at.to_s("%Y-%m-%dT%H:%M:%S")),
           Table::Cell.new(statement.entry_count.to_s, sort: BigDecimal.new(statement.entry_count)),
           Table::Cell.new(statement.start_balance.try { |value| fmt.amount(value) } || "", sort: statement.start_balance || BigDecimal.new(0)),
           Table::Cell.new(statement.end_balance.try { |value| fmt.amount(value) } || "", sort: statement.end_balance || BigDecimal.new(0)),
@@ -199,7 +199,7 @@ module PartiduoUi
         Screen::Item.new(I18n.t("ui.reconciliation.start_balance"), statement.start_balance.try { |value| fmt.amount(value) } || ""),
         Screen::Item.new(I18n.t("ui.reconciliation.end_balance"), statement.end_balance.try { |value| fmt.amount(value) } || ""),
         Screen::Item.new(I18n.t("ui.reconciliation.amount"), fmt.amount(statement.amount)),
-        Screen::Item.new(I18n.t("ui.reconciliation.created_at"), fmt.datetime(statement.created_at, Time::Location::UTC)),
+        Screen::Item.new(I18n.t("ui.reconciliation.created_at"), fmt.datetime(statement.created_at)),
       ]
       columns = [
         Table::Column.new("date", I18n.t("ui.accounts.columns.date")),

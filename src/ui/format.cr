@@ -77,6 +77,14 @@ module PartiduoUi
       "#{date(local)} #{local.to_s("%H:%M")}"
     end
 
+    # Date d'un horodatage (création, dernière modification, gel) dans le
+    # fuseau du dossier : 23 h 30 UTC le 9 mars est le 10 mars à Paris. Une
+    # date du contrat (minuit UTC, convention C1) passe par `date`.
+    def timestamp_date(value : Time?, location : Time::Location = Partiduo::Api::Core.time_zone) : String
+      return "" if value.nil?
+      date(value.in(location))
+    end
+
     # Message d'une erreur du contrat, ses paramètres de date (ISO, seul
     # format du contrat) présentés selon la langue et le pays.
     # Les montants (nombre décimal au point, seul format du contrat) le sont

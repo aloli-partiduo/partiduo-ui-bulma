@@ -229,10 +229,6 @@ module PartiduoUi
 
     ZERO = BigDecimal.new(0)
 
-    # Formule d'un poste de recette : son premier compte est de la classe 7
-    # (`[701]`, `[70%]`).
-    INCOME_FORMULA = /\A[^\[]*\[\s*7/
-
     private def household_accounting : Nil
       treasury_tile
       latest_entries
@@ -290,11 +286,10 @@ module PartiduoUi
     end
 
     # Écart au budget du mois : première prévision dont une période couvre
-    # le jour (`forecast_report`). Seuls comptent les postes de dépense :
-    # ceux dont la formule ne désigne pas d'abord un compte de recette
-    # (classe 7, `INCOME_FORMULA`) ; le réel d'une formule sans suffixe est
-    # un solde en valeur absolue, qui ne dit pas le sens. Écart positif :
-    # dépassement.
+    # le jour (`forecast_report`). Seuls comptent les postes de dépense, par
+    # leur nature (`ForecastReportItemView#nature`, contrat 0.10.0) : le réel
+    # d'une formule sans suffixe est un solde en valeur absolue, qui ne dit
+    # pas le sens. Écart positif : dépassement.
     private def budget_tile : Nil
       Acc.forecasts(@actor).each do |forecast|
         next unless forecast.starts_on <= @today && @today <= forecast.ends_on
@@ -305,7 +300,7 @@ module PartiduoUi
         over = 0
         report.categories.each do |category|
           category.items.each do |item|
-            next if item.formula.matches?(INCOME_FORMULA)
+            next if item.income?
             real = item.real[index]? || ZERO
             estimated = item.estimated[index]? || ZERO
             spent += real

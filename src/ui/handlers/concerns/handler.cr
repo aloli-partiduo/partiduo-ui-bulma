@@ -175,7 +175,7 @@ module PartiduoUi
     # sous-titres (période, critères).
     def pdf_response(tables : Array({String?, Table}), title : String, name : String,
                      summary : Array(String) = [] of String) : Marten::HTTP::Response
-      input = TablePdf.input(tables, title, "#{name}-#{Time.local.to_s("%Y%m%d")}", summary)
+      input = TablePdf.input(tables, title, "#{name}-#{file_day}", summary)
       result = Partiduo::Api::Core.table_pdf(current.actor, input)
       if file = result.value?
         response = Marten::HTTP::Response.new(content: String.new(file.content), content_type: file.content_type)
@@ -198,12 +198,26 @@ module PartiduoUi
 
     def csv_response(table : Table, name : String) : Marten::HTTP::Response
       response = Marten::HTTP::Response.new(content: table.to_csv(fmt), content_type: "text/csv; charset=utf-8")
-      response["Content-Disposition"] = %(attachment; filename="#{name}-#{Time.local.to_s("%Y%m%d")}.csv")
+      response["Content-Disposition"] = %(attachment; filename="#{name}-#{file_day}.csv")
       response
     end
 
+    # Jour d'un export, dans son nom de fichier : la date du jour du dossier
+    # (`Core.today`, son fuseau), pas celle du serveur.
+    def file_day : String
+      Partiduo::Api::Core.today.to_s("%Y%m%d")
+    end
+
+    # Élément du fil d'Ariane, dans le vocabulaire du type de dossier
+    # (« Foyer » pour « Société », `FolderKind::LABEL_KEYS`).
     def crumb(label_key : String, url : String? = nil) : Screen::Crumb
-      Screen::Crumb.new(I18n.t(label_key), url)
+      Screen::Crumb.new(I18n.t(kind_key(label_key)), url)
+    end
+
+    # Clé i18n d'un libellé dans le vocabulaire du type de dossier de la
+    # requête (`FolderKind.label_key`).
+    def kind_key(label_key : String) : String
+      FolderKind.label_key(request, label_key)
     end
   end
 end

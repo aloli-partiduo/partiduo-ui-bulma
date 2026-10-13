@@ -51,9 +51,25 @@ describe "Prévisions budgétaires (lot 6)" do
     item = Acc.forecast(Books.system, forecast.id).categories.first.items.first
     item.amount.should eq(Books.d("1000"))
     item.period_amounts.map { |row| {row.period_id, row.amount} }.should eq([{february.id, Books.d("1500.50")}])
+    # Nature laissée « Selon la formule » : recette (classe 7).
+    item_form.should contain(%(<option value="" selected>Selon la formule</option>))
+    item.nature.should eq("income")
 
     detail = browser.get("/accounting/forecasts/#{forecast.id}").html
     detail.should contain("Chiffre d")
+    detail.should contain("Recette")
+
+    # Nature réglable : l'élément devient une dépense ; la modifier sans nature la garde.
+    edit_url = "/accounting/forecasts/#{forecast.id}/items/#{item.id}/edit"
+    browser.get(edit_url).html.should contain(%(<option value="income" selected>Recette</option>))
+    values = {"label" => "Chiffre d'affaires", "formula" => "[706]", "amount" => "1000", "position" => "10",
+              "period-#{february.id}" => "1500,50"}
+    browser.post(edit_url, values.merge({"nature" => "expense"})).status.should eq(302)
+    Acc.forecast(Books.system, forecast.id).categories.first.items.first.nature.should eq("expense")
+    browser.post(edit_url, values.merge({"nature" => "dividende"})).status.should eq(422)
+    browser.post(edit_url, values.merge({"nature" => ""})).status.should eq(302)
+    Acc.forecast(Books.system, forecast.id).categories.first.items.first.nature.should eq("expense")
+    browser.post(edit_url, values.merge({"nature" => "income"})).status.should eq(302)
     detail.should contain(%(href="/accounting/forecasts/#{forecast.id}/items/#{item.id}/edit"))
 
     Books.card("CUSTOMER", "Atelier Morel", "CLI-MOREL")

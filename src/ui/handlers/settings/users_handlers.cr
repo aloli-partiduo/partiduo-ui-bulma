@@ -82,7 +82,7 @@ module PartiduoUi
       TokenMail.send(token, "invitation")
       link = "#{TokenMail.base_url(token.domain)}#{reverse("invitation", token: token.token)}"
       flash["info"] = I18n.t("ui.users.invitation_link", link: link, email: token.email,
-        date: fmt.datetime(token.expires_at, Time::Location::UTC))
+        date: fmt.datetime(token.expires_at))
     end
   end
 
@@ -104,7 +104,7 @@ module PartiduoUi
           Table::Cell.new(user.full_name),
           Table::Cell.new(I18n.t(FolderKind.role_key(request, user.role))),
           Table::Cell.new(user.profile_id.try { |id| names[id]? } || ""),
-          Table::Cell.new(user.last_login_at.try { |moment| fmt.datetime(moment, Time::Location::UTC) } || "",
+          Table::Cell.new(user.last_login_at.try { |moment| fmt.datetime(moment) } || "",
             sort: user.last_login_at.try(&.to_s("%Y-%m-%dT%H:%M:%S")) || ""),
           Table::Cell.new(state(user)),
         ], user.active ? "" : "pd-row-closed")
@@ -163,7 +163,7 @@ module PartiduoUi
         Screen::Item.new(I18n.t("ui.users.access_ends_on"), user.access_ends_on.try { |day| fmt.date(day) } || ""),
         Screen::Item.new(I18n.t("ui.users.state"), state(user)),
         Screen::Item.new(I18n.t("ui.users.failed_attempts"), user.failed_attempts.to_s),
-        Screen::Item.new(I18n.t("ui.users.last_login"), user.last_login_at.try { |moment| fmt.datetime(moment, Time::Location::UTC) } || ""),
+        Screen::Item.new(I18n.t("ui.users.last_login"), user.last_login_at.try { |moment| fmt.datetime(moment) } || ""),
       ]
       security = [
         Screen::Item.new(I18n.t("ui.users.has_password"), yes_no(user.has_password)),
@@ -484,7 +484,7 @@ module PartiduoUi
       ]
       rows = events.map do |event|
         Table::Row.new([
-          Table::Cell.new(event.created_at.try { |moment| fmt.datetime(moment, Time::Location::UTC) } || "",
+          Table::Cell.new(event.created_at.try { |moment| fmt.datetime(moment) } || "",
             sort: event.created_at.try(&.to_s("%Y-%m-%dT%H:%M:%S")) || ""),
           Table::Cell.new(event.user_label), Table::Cell.new(event.action), Table::Cell.new(event.module_code),
           Table::Cell.new(event.state), Table::Cell.new(event.ip), Table::Cell.new(event.detail),

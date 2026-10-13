@@ -230,7 +230,7 @@ module PartiduoUi
           confirm: I18n.t("ui.providers.unlink_confirm"))
         Table::Row.new([
           Table::Cell.new(identity.provider), Table::Cell.new(identity.subject),
-          Table::Cell.new(identity.last_used_at.try { |moment| fmt.datetime(moment, Time::Location::UTC) } || ""),
+          Table::Cell.new(identity.last_used_at.try { |moment| fmt.datetime(moment) } || ""),
           Table::Cell.new("", actions: [unlink]),
         ])
       end

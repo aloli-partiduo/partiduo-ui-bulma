@@ -111,6 +111,13 @@ en:
     household:
       roles:
         member: "Household member"
+      menu:
+        cards_list: "Contacts"
+        core_company: "Household"
+      company:
+        edit: "Edit household"
+        intro: "Household identity, shown in the mentions of documents. The tax regime cannot change after creation."
+        updated: "Household saved."
     search:
       title: "Search"
       query: "Search: “%{q}”"
@@ -301,7 +308,7 @@ en:
       unauthorized: "Sign in to access this page."
       back: "Back to the dashboard"
     emails:
-      expires: "This link expires on %{at} (UTC)."
+      expires: "This link expires on %{at} (time zone %{zone})."
       ignore: "If you did not make this request, ignore this message."
       password_reset:
         subject: "Partiduo: new password"
@@ -1838,6 +1845,9 @@ en:
       item_saved: "Item saved."
       label: "Label"
       name: "Name"
+      nature: "Nature"
+      nature_auto: "From the formula"
+      nature_help: "Income or expense. From the formula: income if its first account is in class 7, expense otherwise. A household dashboard compares only expenses with the budget."
       new: "New forecast"
       new_category: "New category"
       new_item: "New item"

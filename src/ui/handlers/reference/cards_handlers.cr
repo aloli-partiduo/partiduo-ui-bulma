@@ -312,7 +312,7 @@ module PartiduoUi
       intro = Partiduo::Api::Cards.count_cards(actor, card_query) > LIST_LIMIT ? I18n.t("ui.cards.truncated", count: LIST_LIMIT) : nil
       title = I18n.t(items ? "ui.cards.items" : "ui.cards.parties")
       list_page(title, table, [crumb("core.menu.reference")], items ? "ui.cards.csv_name_items" : "ui.cards.csv_name", actions, tabs(items),
-        I18n.t("cards.menu.cards_list"), list_filters(items, categories, category_id, kinds, kind), intro, filter: false)
+        I18n.t(kind_key("cards.menu.cards_list")), list_filters(items, categories, category_id, kinds, kind), intro, filter: false)
     end
 
     # Import CSV (D-OUT-007), dans la catégorie filtrée s'il y en a une.
@@ -508,8 +508,8 @@ module PartiduoUi
         Screen::Item.new(I18n.t("ui.cards.category"), card.category_name),
         Screen::Item.new(I18n.t("ui.cards.kind"), kind_label(card.kind)),
         Screen::Item.new(I18n.t("ui.cards.description"), card.description),
-        Screen::Item.new(I18n.t("ui.cards.created_at"), fmt.date(card.created_at), mono: true),
-        Screen::Item.new(I18n.t("ui.cards.updated_at"), fmt.date(card.updated_at), mono: true),
+        Screen::Item.new(I18n.t("ui.cards.created_at"), fmt.timestamp_date(card.created_at), mono: true),
+        Screen::Item.new(I18n.t("ui.cards.updated_at"), fmt.timestamp_date(card.updated_at), mono: true),
       ])
     end
 

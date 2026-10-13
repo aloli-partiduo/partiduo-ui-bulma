@@ -17,7 +17,9 @@ module PartiduoUi
       String.build do |io|
         io << I18n.t("ui.emails.#{@kind}.intro") << "\n\n"
         io << @link << "\n\n"
-        io << I18n.t("ui.emails.expires", at: @format.datetime(@expires_at, Time::Location::UTC)) << "\n"
+        # Heure du dossier, nommée : le destinataire peut lire ailleurs.
+        zone = Partiduo::Api::Core.time_zone
+        io << I18n.t("ui.emails.expires", at: @format.datetime(@expires_at, zone), zone: zone.name) << "\n"
         io << I18n.t("ui.emails.ignore") << "\n"
       end
     end

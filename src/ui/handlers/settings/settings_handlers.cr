@@ -111,7 +111,7 @@ module PartiduoUi
         Screen::Section.new(I18n.t("ui.company.identity"), identity),
         Screen::Section.new(I18n.t("ui.company.address"), address),
         Screen::Section.new(I18n.t("ui.company.instance"), instance),
-      ], actions, intro: I18n.t("ui.company.intro"))
+      ], actions, intro: I18n.t(kind_key("ui.company.intro")))
     end
   end
 
@@ -129,7 +129,7 @@ module PartiduoUi
       if form_errors.empty?
         result = Core.update_settings(current.actor, input)
         if result.success?
-          flash["success"] = I18n.t("ui.company.updated")
+          flash["success"] = I18n.t(kind_key("ui.company.updated"))
           return go(reverse("core:company"))
         end
         return show(refused(input, form_errors, result.errors))
@@ -147,7 +147,7 @@ module PartiduoUi
     end
 
     private def show(form : Form)
-      form_page(I18n.t("ui.company.edit"), settings_crumbs("core.menu.core_company", "core:company"), form,
+      form_page(I18n.t(kind_key("ui.company.edit")), settings_crumbs("core.menu.core_company", "core:company"), form,
         reverse("core:company_edit"), I18n.t("ui.forms.save"), reverse("core:company"))
     end
   end

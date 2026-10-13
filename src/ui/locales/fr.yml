@@ -111,6 +111,13 @@ fr:
     household:
       roles:
         member: "Membre du foyer"
+      menu:
+        cards_list: "Contacts"
+        core_company: "Foyer"
+      company:
+        edit: "Modifier le foyer"
+        intro: "Identité du foyer, reprise dans les mentions des documents. Le régime fiscal ne change plus après la création."
+        updated: "Foyer enregistré."
     search:
       title: "Recherche"
       query: "Recherche : « %{q} »"
@@ -301,7 +308,7 @@ fr:
       unauthorized: "Connectez-vous pour accéder à cette page."
       back: "Revenir au tableau de bord"
     emails:
-      expires: "Ce lien expire le %{at} (heure UTC)."
+      expires: "Ce lien expire le %{at} (fuseau %{zone})."
       ignore: "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message."
       password_reset:
         subject: "Partiduo : nouveau mot de passe"
@@ -1838,6 +1845,9 @@ fr:
       item_saved: "Élément enregistré."
       label: "Libellé"
       name: "Nom"
+      nature: "Nature"
+      nature_auto: "Selon la formule"
+      nature_help: "Recette ou dépense. Selon la formule : recette si son premier compte est de la classe 7, dépense sinon. Le tableau de bord d'un foyer ne compare au budget que les dépenses."
       new: "Nouvelle prévision"
       new_category: "Nouvelle catégorie"
       new_item: "Nouvel élément"

@@ -117,7 +117,7 @@ module PartiduoUi
     # État d'un exercice, en clair : « ouvert, modifiable », « clôturé le …
     # par … », « 2035 transmise le … — verrouillé ».
     def exercise_status(view : Liberal::YearView) : String
-      at = view.frozen_at.try { |moment| fmt.date(moment) } || ""
+      at = view.frozen_at.try { |moment| fmt.timestamp_date(moment) } || ""
       if view.locked?
         I18n.t("ui.liberal.exercise.locked", date: at)
       elsif view.closed? && !view.closed_by.empty?

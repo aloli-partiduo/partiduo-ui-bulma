@@ -111,6 +111,13 @@ nl:
     household:
       roles:
         member: "Gezinslid"
+      menu:
+        cards_list: "Contacten"
+        core_company: "Huishouden"
+      company:
+        edit: "Huishouden wijzigen"
+        intro: "Identiteit van het huishouden, overgenomen in de vermeldingen op documenten. Het belastingstelsel wijzigt niet meer na de aanmaak."
+        updated: "Huishouden opgeslagen."
     search:
       title: "Zoeken"
       query: "Zoekopdracht: „%{q}”"
@@ -301,7 +308,7 @@ nl:
       unauthorized: "Meld u aan om deze pagina te openen."
       back: "Terug naar het dashboard"
     emails:
-      expires: "Deze link vervalt op %{at} (UTC-tijd)."
+      expires: "Deze link vervalt op %{at} (tijdzone %{zone})."
       ignore: "Als u dit niet hebt aangevraagd, negeer dan dit bericht."
       password_reset:
         subject: "Partiduo: nieuw wachtwoord"
@@ -1838,6 +1845,9 @@ nl:
       item_saved: "Element opgeslagen."
       label: "Omschrijving"
       name: "Naam"
+      nature: "Aard"
+      nature_auto: "Volgens de formule"
+      nature_help: "Ontvangst of uitgave. Volgens de formule: ontvangst als de eerste rekening tot klasse 7 behoort, anders uitgave. Het dashboard van een huishouden vergelijkt alleen de uitgaven met het budget."
       new: "Nieuwe prognose"
       new_category: "Nieuwe categorie"
       new_item: "Nieuw element"

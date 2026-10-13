@@ -44,8 +44,8 @@ module PartiduoUi
         {
           "id"           => passkey.id,
           "name"         => passkey.name.presence || I18n.t("ui.security.passkey_unnamed"),
-          "created_at"   => passkey.created_at.try { |time| fmt.date(time.to_local) } || "",
-          "last_used_at" => passkey.last_used_at.try { |time| fmt.date(time.to_local) },
+          "created_at"   => passkey.created_at.try { |time| fmt.timestamp_date(time) } || "",
+          "last_used_at" => passkey.last_used_at.try { |time| fmt.timestamp_date(time) },
           "synced"       => passkey.backup_state,
         }
       end

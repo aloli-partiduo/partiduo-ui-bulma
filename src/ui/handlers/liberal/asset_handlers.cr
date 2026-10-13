@@ -270,13 +270,14 @@ module PartiduoUi
       end
       item.reversal_of_id.try { |id| details << Screen::Item.new(I18n.t("ui.liberal.line.cancels"), Liberal.asset(current.actor, id).number, reverse("liberal:asset", id: id), mono: true) }
       item.reversed_by_id.try { |id| details << Screen::Item.new(I18n.t("ui.liberal.line.cancelled_by"), Liberal.asset(current.actor, id).number, reverse("liberal:asset", id: id), mono: true) }
-      sections = [Screen::Section.new(I18n.t("ui.liberal.asset.one"), details)]
-      sections << schedule(item) if item.live? && item.duration_years > 0
-      item.disposal.try { |disposal| sections << disposal_section(item, disposal) }
       exercise = Liberal.year(current.actor, item.acquired_on.year)
       details << Screen::Item.new(I18n.t("ui.liberal.exercise.title"),
         "#{I18n.t("ui.liberal.exercise.label", year: exercise.year.to_s)} · #{exercise_status(exercise)}")
-      item.modified_at.try { |moment| details << Screen::Item.new(I18n.t("ui.liberal.line.modified_at"), fmt.date(moment)) }
+      item.modified_at.try { |moment| details << Screen::Item.new(I18n.t("ui.liberal.line.modified_at"), fmt.timestamp_date(moment)) }
+      # La rubrique copie ses éléments : elle se construit après le dernier.
+      sections = [Screen::Section.new(I18n.t("ui.liberal.asset.one"), details)]
+      sections << schedule(item) if item.live? && item.duration_years > 0
+      item.disposal.try { |disposal| sections << disposal_section(item, disposal) }
       intro = I18n.t(item.locked ? "ui.liberal.asset.intangible" : "ui.liberal.asset.open")
       detail_page("#{I18n.t("ui.liberal.asset.one")} #{item.number}", assets_crumbs, sections, detail_actions(item),
         status_tag: state(item), intro: intro)
