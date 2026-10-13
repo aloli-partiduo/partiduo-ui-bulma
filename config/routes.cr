@@ -17,6 +17,13 @@ CORE_ROUTES = Marten::Routing::Map.draw do
   path "/attachments/<id:int>", PartiduoUi::AttachmentHandler, name: "attachment"
   # Paramètres du dossier (D-UI-051, D-UI-052) : société, modules, devises,
   # utilisateurs, profils et droits par journal.
+  # Approbation des opérations sensibles des extensions (A-SEPA-3).
+  path "/approvals", PartiduoUi::ApprovalsHandler, name: "approvals"
+  path "/approvals/<id:int>", PartiduoUi::ApprovalHandler, name: "approval"
+  path "/approvals/<id:int>/approve", PartiduoUi::ApprovalApproveHandler, name: "approval_approve"
+  path "/approvals/<id:int>/reject", PartiduoUi::ApprovalRejectHandler, name: "approval_reject"
+  path "/approvals/<id:int>/cancel", PartiduoUi::ApprovalCancelHandler, name: "approval_cancel"
+  path "/approvals/<id:int>/reauth", PartiduoUi::ApprovalReauthHandler, name: "approval_reauth"
   path "/settings/company", PartiduoUi::CompanyHandler, name: "company"
   path "/settings/company/edit", PartiduoUi::CompanyEditHandler, name: "company_edit"
   path "/settings/modules", PartiduoUi::ModulesHandler, name: "modules"
@@ -464,6 +471,14 @@ Marten.routes.draw do
   path "/ext/<code:str>", PartiduoUi::ExtensionHandler, name: "extension_bare"
   path "/ext/<code:str>/", PartiduoUi::ExtensionHandler, name: "extension_root"
   path "/ext/<code:str>/<path:path>", PartiduoUi::ExtensionHandler, name: "extension"
+
+  # Routes publiques d'extension (A-FRM-1), sans session : toute requête sous
+  # /p/<code>/ passe par PartiduoUi::PublicExtensionHandler (extension active,
+  # limitation de débit, taille, en-têtes stricts). Les cartes des
+  # extensions sont ajoutées après, pour le nommage seulement.
+  path "/p/<code:str>", PartiduoUi::PublicExtensionHandler, name: "public_extension_bare"
+  path "/p/<code:str>/", PartiduoUi::PublicExtensionHandler, name: "public_extension_root"
+  path "/p/<code:str>/<path:path>", PartiduoUi::PublicExtensionHandler, name: "public_extension"
 
   # Fichiers statiques servis par Marten : directement depuis les applications
   # en développement et en test ; en production, après `collectassets`, par le

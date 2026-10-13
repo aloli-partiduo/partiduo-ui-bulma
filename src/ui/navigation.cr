@@ -56,6 +56,16 @@ module PartiduoUi
     end
   end
 
+  # Page d'erreur des routes publiques d'extension (404, 413, 429 ;
+  # A-FRM-1) : ni script, ni menu, ni lien vers le dossier.
+  module PublicErrorPage
+    def self.render(request : Marten::HTTP::Request, status : Int32) : Marten::HTTP::Response
+      context = Marten::Template::Context.from({"status" => status, "locale" => I18n.locale}, request)
+      content = Marten.templates.get_template("ui/errors/public.html").render(context)
+      Marten::HTTP::Response.new(content: content, content_type: "text/html; charset=utf-8", status: status)
+    end
+  end
+
   # Page d'erreur (403, 404) rendue hors d'un handler (middleware).
   module ErrorPage
     def self.render(request : Marten::HTTP::Request, status : Int32) : Marten::HTTP::Response

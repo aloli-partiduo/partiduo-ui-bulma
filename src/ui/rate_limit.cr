@@ -18,10 +18,20 @@ module PartiduoUi
     @@hits = {} of String => Array(Time)
     @@mutex = Mutex.new
 
+    # Plus longue fenêtre des règles déclarées hors de `RULES` (routes
+    # publiques des extensions, A-FRM-1), pour la purge.
+    @@longest_extra = Time::Span.zero
+
     # Enregistre une demande ; `false` si la limite de `bucket` est atteinte
     # pour cette adresse.
     def self.allow?(request : Marten::HTTP::Request, bucket : String, now : Time = Time.utc) : Bool
-      rule = RULES[bucket]
+      allow?(request, bucket, RULES[bucket], now)
+    end
+
+    # Même contrôle avec une règle donnée (route publique d'une extension,
+    # A-FRM-1) ; `bucket` distingue les compteurs.
+    def self.allow?(request : Marten::HTTP::Request, bucket : String, rule : Rule, now : Time = Time.utc) : Bool
+      @@mutex.synchronize { @@longest_extra = rule.window if rule.window > @@longest_extra }
       key = "#{bucket}|#{client_ip(request)}"
       @@mutex.synchronize do
         purge(now) if @@hits.size > 10_000
@@ -50,7 +60,7 @@ module PartiduoUi
     end
 
     private def self.purge(now : Time) : Nil
-      longest = RULES.values.max_of(&.window)
+      longest = {RULES.values.max_of(&.window), @@longest_extra}.max
       @@hits.reject! { |_, hits| hits.all? { |time| time <= now - longest } }
     end
   end

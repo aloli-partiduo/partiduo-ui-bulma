@@ -23,8 +23,8 @@ module PartiduoUi
     end
 
     def company_form(input : Core::SettingsInput) : Form
-      identity = %w[company_name legal_form rcs siren vat_number].map do |name|
-        Form::Field.new(name, label(name), value: text_of(input, name), mono: %w[siren vat_number].includes?(name),
+      identity = %w[company_name legal_form rcs siren vat_number creditor_identifier].map do |name|
+        Form::Field.new(name, label(name), value: text_of(input, name), mono: %w[siren vat_number creditor_identifier].includes?(name),
           required: name == "company_name", wide: name == "company_name")
       end
       identity.insert(2, Form::Field.new("share_capital", label("share_capital"), "number", fmt.input_number(input.share_capital, 2), mono: true))
@@ -44,6 +44,11 @@ module PartiduoUi
         Form::Field.new("auth_minimum_level", label("auth_minimum_level"), "select", input.auth_minimum_level.to_s, options: levels),
         Form::Field.new("session_duration_minutes", label("session_duration_minutes"), value: input.session_duration_minutes.to_s,
           mono: true),
+        # Approbation des opérations sensibles des extensions (A-SEPA-3).
+        Form::Field.new("approval_mode", label("approval_mode"), "select", input.approval_mode || "single",
+          options: Core::APPROVAL_MODES.map { |mode| option(mode, I18n.t("core.settings.approval_modes.#{mode}")) }),
+        Form::Field.new("approval_reauth_minutes", label("approval_reauth_minutes"),
+          value: (input.approval_reauth_minutes || 5).to_s, mono: true),
       ]
       Form.new([
         Form::Group.new(I18n.t("ui.company.identity"), identity),
@@ -55,6 +60,7 @@ module PartiduoUi
 
     def read_company(current_settings : Core::SettingsView, form_errors : Array({String, String})) : Core::SettingsInput
       minutes = integer("session_duration_minutes", form_errors)
+      reauth = integer("approval_reauth_minutes", form_errors, required: false)
       capital = decimal("share_capital", form_errors)
       level = field("auth_minimum_level").to_i?
       methods = Core::AUTH_METHODS.select { |method| checkbox("auth_method:#{method}") }
@@ -65,8 +71,15 @@ module PartiduoUi
         country_code: field("country_code").upcase.presence, phone: field("phone"), email: field("email"),
         tax_regime: current_settings.tax_regime, default_locale: field("default_locale").presence,
         domain: field("domain").presence, auth_methods: methods, auth_minimum_level: level,
-        session_duration_minutes: minutes,
+        session_duration_minutes: minutes, creditor_identifier: posted("creditor_identifier"),
+        approval_mode: field("approval_mode").presence, approval_reauth_minutes: reauth,
       )
+    end
+
+    # Champ envoyé par le formulaire, ou `nil` s'il n'y figure pas (le
+    # contrat garde alors la valeur enregistrée).
+    private def posted(name : String) : String?
+      request.data.has_key?(name) ? field(name) : nil
     end
 
     private def text_of(input : Core::SettingsInput, name : String) : String
@@ -75,6 +88,7 @@ module PartiduoUi
         "siren" => input.siren, "vat_number" => input.vat_number, "street" => input.street,
         "street_number" => input.street_number, "postcode" => input.postcode, "city" => input.city,
         "country_code" => input.country_code, "phone" => input.phone, "email" => input.email, "domain" => input.domain,
+        "creditor_identifier" => input.creditor_identifier,
       }[name]? || ""
     end
   end
@@ -89,6 +103,7 @@ module PartiduoUi
         Screen::Item.new(label("rcs"), settings.rcs),
         Screen::Item.new(label("siren"), settings.siren, mono: true),
         Screen::Item.new(label("vat_number"), settings.vat_number, mono: true),
+        Screen::Item.new(label("creditor_identifier"), settings.creditor_identifier, mono: true),
         Screen::Item.new(label("tax_regime"), I18n.t(settings.tax_regime_key)),
       ]
       address = [
@@ -104,6 +119,8 @@ module PartiduoUi
         Screen::Item.new(label("auth_methods"), settings.auth_methods.map { |method| I18n.t("core.settings.auth_methods.#{method}") }.join(", ")),
         Screen::Item.new(label("auth_minimum_level"), I18n.t("core.settings.auth_levels.level_#{settings.auth_minimum_level}")),
         Screen::Item.new(label("session_duration_minutes"), settings.session_duration_minutes.to_s),
+        Screen::Item.new(label("approval_mode"), I18n.t("core.settings.approval_modes.#{settings.approval_mode}")),
+        Screen::Item.new(label("approval_reauth_minutes"), settings.approval_reauth_minutes.to_s),
       ]
       actions = [] of Screen::Action
       actions << link_action("ui.forms.edit", reverse("core:company_edit"), "primary") if can?(PERMISSION)
@@ -139,7 +156,7 @@ module PartiduoUi
 
     private def refused(input, form_errors, errors = [] of Partiduo::Api::FieldError) : Form
       form = company_form(input)
-      %w[share_capital session_duration_minutes].each do |name|
+      %w[share_capital session_duration_minutes approval_reauth_minutes].each do |name|
         form.fields.find(&.name.==(name)).try(&.value=(field(name)))
       end
       form_errors.each { |(name, message)| form.add_error(name, message) }

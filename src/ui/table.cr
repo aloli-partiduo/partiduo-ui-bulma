@@ -273,13 +273,31 @@ module PartiduoUi
     end
 
     # Export CSV de toutes les lignes filtrées et triées (pas seulement la
-    # page), avec l'en-tête traduit ; BOM UTF-8 pour les tableurs.
+    # page), avec l'en-tête traduit ; BOM UTF-8 pour les tableurs. Chaque
+    # cellule est protégée contre l'injection de formules (A-FRM-5,
+    # `csv_safe`) : une valeur reçue du public peut entrer dans une fiche
+    # et ressortir ici.
     def to_csv(format : Format) : String
       "﻿" + CSV.build(separator: format.csv_separator) do |csv|
         exported = @columns.each_index.select { |index| @columns[index].kind != "actions" }.to_a
-        csv.row(exported.map { |index| @columns[index].label })
-        @rows.each { |row| csv.row(exported.map { |index| row.cells[index].csv }) }
+        csv.row(exported.map { |index| Table.csv_safe(@columns[index].label) })
+        @rows.each { |row| csv.row(exported.map { |index| Table.csv_safe(row.cells[index].csv) }) }
       end
+    end
+
+    # Début de cellule qu'un tableur lit comme une formule ou une commande :
+    # `=`, `+`, `-`, `@`, tabulation, retour chariot ou saut de ligne.
+    FORMULA_START = /\A[=+\-@\t\r\n]/
+    # Nombre écrit tel quel (montant, quantité : `-12.50`, `-3,2`), que le
+    # tableur lit comme un nombre et jamais comme une formule.
+    PLAIN_NUMBER = /\A-?\d+(?:[.,]\d+)?\z/
+
+    # Cellule d'un export CSV neutralisée (A-FRM-5) : une valeur qui
+    # commence par un caractère de formule est préfixée d'une apostrophe,
+    # sauf un nombre écrit tel quel ; même règle que les éditions du cœur
+    # (`Partiduo::Core::TableOutput.csv_text`, D-2F-009).
+    def self.csv_safe(value : String) : String
+      value.matches?(FORMULA_START) && !value.matches?(PLAIN_NUMBER) ? "'#{value}" : value
     end
 
     # Texte replié pour la comparaison : minuscules, sans accents.

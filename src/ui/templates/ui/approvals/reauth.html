@@ -1,0 +1,31 @@
+{# SPDX-License-Identifier: AGPL-3.0-or-later. Confirmer son identité avant d'approuver une opération sensible (A-SEPA-3) : code TOTP ou passkey, puis retour à la demande. #}{% extend "ui/base.html" %}
+{% block scripts %}<script src="{% asset 'ui/js/passkey.js' %}" defer></script>{% endblock scripts %}
+{% block title %}{{ title }}{% endblock title %}
+{% block crumbs %}{% include "ui/_crumbs.html" %}{% endblock crumbs %}
+{% block heading %}{{ title }}{% endblock heading %}
+{% block content %}
+<section class="pd-panel pd-elevate" aria-labelledby="pd-reauth-title">
+  <header><h2 id="pd-reauth-title">{{ summary }}{% if amount %} · <span class="pd-mono">{{ amount }}</span>{% endif %}</h2></header>
+  <div class="pd-body">
+    <p class="mb-3">{% translate "ui.approvals.reauth_help" minutes: minutes %}</p>
+    {% if has_passkey %}
+    <button type="button" class="button is-primary pd-touch" data-passkey="elevate"
+            data-options-url="{% url 'account_elevate_passkey_options' %}" data-submit-url="{% url 'account_elevate_passkey' %}"
+            data-next="{{ back }}" data-status="pd-reauth-status">{% include "ui/_icon.html" with name="key-round" %}<span>{% translate "ui.approvals.reauth_passkey" %}</span></button>
+    <p class="help pd-passkey-status" id="pd-reauth-status" role="status" aria-live="polite" data-unsupported="{% translate 'ui.passkey.unsupported' %}" data-failed="{% translate 'ui.passkey.failed' %}" data-waiting="{% translate 'ui.passkey.waiting' %}"></p>
+    {% endif %}
+    {% if has_totp %}
+    <form method="post" action="{{ action }}" class="pd-inline-form mt-3" novalidate>
+      {% csrf_input %}
+      <label class="label" for="pd-reauth-code">{% translate "ui.second_factor.totp_label" %}</label>
+      <input class="input pd-code" id="pd-reauth-code" name="code" type="text" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" autocomplete="one-time-code" required{% if errors.code %} aria-invalid="true" aria-describedby="pd-reauth-errors"{% endif %}>
+      <button class="button pd-touch" type="submit">{% translate "ui.approvals.reauth_totp" %}</button>
+    </form>
+    {% include "ui/_errors.html" with messages=errors.code, id="pd-reauth-errors" %}
+    {% endif %}
+    {% include "ui/_errors.html" with messages=errors.base, id="pd-reauth-base-errors" %}
+    {% if not has_passkey %}{% if not has_totp %}<p>{% translate "ui.approvals.reauth_enroll" %} <a class="pd-link" href="{% url 'account_security' %}">{% translate "ui.approvals.reauth_security" %}</a></p>{% endif %}{% endif %}
+    <p class="mt-4"><a class="button pd-touch" href="{{ back }}">{% translate "ui.approvals.back" %}</a></p>
+  </div>
+</section>
+{% endblock content %}

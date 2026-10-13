@@ -414,6 +414,59 @@ couleurs du thème (clair et sombre). Les specs
 (`spec/ui/extension_hooks_spec.cr`) éprouvent ces points avec l'extension
 factice `UITEST`.
 
+=== Routes publiques (A-FRM-1)
+
+Une extension qui sert une page au public (formulaire en ligne, lien à
+jeton) la monte sous `/p/<code en minuscules>/`, sans session :
+
+[source,crystal]
+----
+Skel::Ui::PUBLIC_ROUTES = Marten::Routing::Map.draw do
+  path "/<token:str>", Skel::Ui::PublicHandler, name: "page"
+end
+
+PartiduoUi::Extensions.public_mount "SKEL", Skel::Ui::PUBLIC_ROUTES,
+  rate_limit: PartiduoUi::RateLimit::Rule.new(60, 10.minutes),        # défaut, toutes routes
+  rate_limits: {"page" => PartiduoUi::RateLimit::Rule.new(10, 10.minutes)},
+  max_body_bytes: 2_400_000_i64
+# reverse("skel_public:page", token: jeton) → /p/skel/<jeton>
+----
+
+Toute requête passe d'abord par `PartiduoUi::PublicExtensionHandler` :
+extension inconnue, sans routes publiques ou inactive → 404 ; route inconnue
+→ 404 ; limite de débit de la route dépassée, par adresse
+(`RateLimit.client_ip`) → 429 avec `Retry-After` ; taille annoncée au-delà
+de `max_body_bytes` → 413 ; puis le handler de l'extension, sous la
+protection CSRF de Marten. Les pages d'erreur sont sans script ni lien vers
+le dossier. Chaque réponse reçoit les en-têtes stricts
+`Extensions::PUBLIC_HEADERS` (CSP `default-src 'none'`, pas de cadre, pas
+de cache, `noindex`, `Referrer-Policy: same-origin`…), sauf ceux que le
+handler a posés lui-même. Le contrat de l'extension reste seul juge du
+jeton. Specs : `spec/ui/amendments_spec.cr` (extension factice `UIPUB`).
+
+=== Exports CSV (A-FRM-5)
+
+`Table#to_csv`, export commun de toutes les listes, neutralise chaque
+cellule (`Table.csv_safe`) : une valeur qui commence par `=`, `+`, `-`,
+`@`, une tabulation ou un retour est préfixée d'une apostrophe, sauf un
+nombre écrit tel quel (`-12.50`) ; une donnée reçue du public ne devient
+jamais une formule dans un tableur.
+
+=== Approbations (A-SEPA-3)
+
+Les opérations sensibles qu'une extension soumet à approbation
+(`Partiduo::Api::Approvals`, `doc/api/approvals.adoc` du cœur) se décident
+sur l'écran commun « Approbations » (`/approvals`) : liste des demandes que
+l'utilisateur peut décider ou qu'il a soumises, détail, piste d'audit,
+approuver (commentaire facultatif), rejeter, retirer. L'entrée du menu et
+la ligne de « À traiter » n'apparaissent que s'il y a des demandes en
+attente. Approuver exige une authentification forte récente : sinon
+l'écran envoie confirmer son identité (`/approvals/<id>/reauth` : code TOTP
+ou passkey, jamais un code de récupération) et revient à la demande.
+L'extension peut lier son propre écran à `reverse("core:approval", id: …)`.
+Le réglage (une ou deux personnes, délai) se fait dans l'écran de la
+société.
+
 == JavaScript
 
 HTMX, les paquets Opal, et deux scripts de liaison au navigateur écrits à la

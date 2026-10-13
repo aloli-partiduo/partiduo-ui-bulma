@@ -37,6 +37,12 @@ module PartiduoUi
         next if count.nil? || count.zero? || (todo = counter.todo).nil?
         board.todos.unshift(Dashboard::Todo.new(I18n.t(todo, count: count), nil, Shell.resolve(counter.route), counter.tone))
       end
+      # Opérations à approuver (A-SEPA-3), en tête de « À traiter ».
+      approvals = Partiduo::Api::Approvals.pending_count(actor)
+      if approvals > 0
+        board.todos.unshift(Dashboard::Todo.new(I18n.t("ui.approvals.todo", count: approvals), nil,
+          reverse("core:approvals"), "warn"))
+      end
       overview.missing.each do |item|
         board.add_todo(Dashboard::Todo.new(I18n.t("auth.missing.#{item}"), nil, reverse("account_security"), "warn"))
       end

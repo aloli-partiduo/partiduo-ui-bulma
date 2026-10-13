@@ -94,6 +94,112 @@ module PartiduoUi
       @@mounts[code]?
     end
 
+    # --- Routes publiques (A-FRM-1) ------------------------------------------
+
+    # Préfixe réservé des routes publiques d'extension : `/p/<code>/`, code
+    # en minuscules (adresse donnée au public).
+    PUBLIC_PREFIX = "/p/"
+
+    # En-têtes stricts posés sur toute réponse publique d'extension, sauf si
+    # le handler de l'extension en a posé un de même nom : aucun script ni
+    # ressource tierce, pas de cadre, pas de cache, pas d'indexation, pas de
+    # référent vers un autre site (l'adresse peut porter un jeton). Le
+    # référent reste `same-origin` : `no-referrer` ferait envoyer
+    # `Origin: null` avec un formulaire, que la protection CSRF refuse.
+    PUBLIC_HEADERS = {
+      "Content-Security-Policy" => "default-src 'none'; style-src 'self'; font-src 'self'; img-src 'self' data:; " \
+                                   "form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+      "Referrer-Policy"              => "same-origin",
+      "Cache-Control"                => "no-store",
+      "Pragma"                       => "no-cache",
+      "X-Robots-Tag"                 => "noindex, nofollow, noarchive",
+      "X-Frame-Options"              => "DENY",
+      "X-Content-Type-Options"       => "nosniff",
+      "Permissions-Policy"           => "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+      "Cross-Origin-Resource-Policy" => "same-origin",
+      "Cross-Origin-Opener-Policy"   => "same-origin",
+    }
+
+    # Interface publique d'une extension, montée sous `/p/<code>/` :
+    # `rate_limit` vaut pour toutes ses routes, `rate_limits` par route (nom
+    # court ou complet) ; `max_body_bytes` : taille annoncée au-delà de
+    # laquelle un envoi est refusé (413) avant toute lecture.
+    record PublicMount, code : String, routes : Marten::Routing::Map, rate_limit : RateLimit::Rule,
+      rate_limits : Hash(String, RateLimit::Rule), max_body_bytes : Int64? do
+      # Préfixe des noms de route : `form_public` pour `FORM`.
+      def namespace : String
+        "#{code.downcase}_public"
+      end
+
+      def path : String
+        "#{PUBLIC_PREFIX}#{code.downcase}"
+      end
+
+      def rule_for(route_name : String?) : RateLimit::Rule
+        route_name.try { |name| rate_limits[name]? } || rate_limit
+      end
+    end
+
+    # Limite par défaut d'une route publique : 60 requêtes par adresse en
+    # 10 minutes.
+    DEFAULT_PUBLIC_LIMIT = RateLimit::Rule.new(60, 10.minutes)
+
+    @@public_mounts = {} of String => PublicMount
+    @@public_drawn = Set(String).new
+
+    # Déclare des routes *publiques* d'une extension (A-FRM-1) : sans
+    # session, sous `/p/<code en minuscules>/`. Toute requête passe par
+    # `PartiduoUi::PublicExtensionHandler`, qui, avant le handler de
+    # l'extension, rend 404 si l'extension est inconnue ou inactive,
+    # applique la limitation de débit de la route (429, `Retry-After`) et
+    # la limite de taille (413) ; la réponse reçoit `PUBLIC_HEADERS`. La
+    # protection CSRF de Marten s'applique comme ailleurs. Le contrat de
+    # l'extension reste seul juge du jeton qu'une adresse publique porte.
+    #
+    # ```
+    # Forms::Ui::PUBLIC_ROUTES = Marten::Routing::Map.draw do
+    #   path "/<token:str>", Forms::Ui::PublicHandler, name: "form"
+    # end
+    # PartiduoUi::Extensions.public_mount "FORM", Forms::Ui::PUBLIC_ROUTES,
+    #   rate_limits: {"form" => PartiduoUi::RateLimit::Rule.new(60, 10.minutes)},
+    #   max_body_bytes: 2_400_000_i64
+    # # adresse : reverse("form_public:form", token: jeton) → /p/form/<jeton>
+    # ```
+    def self.public_mount(code : String, routes : Marten::Routing::Map,
+                          rate_limit : RateLimit::Rule = DEFAULT_PUBLIC_LIMIT,
+                          rate_limits : Hash(String, RateLimit::Rule) = {} of String => RateLimit::Rule,
+                          max_body_bytes : Int64? = nil) : PublicMount
+      check_code!(code)
+      raise ArgumentError.new("routes publiques d'extension déjà montées : #{code}") if @@public_mounts.has_key?(code)
+      namespace = "#{code.downcase}_public"
+      qualified = rate_limits.to_h do |route, rule|
+        {route.includes?(':') ? route : "#{namespace}:#{route}", rule}
+      end
+      @@public_mounts[code] = PublicMount.new(code, routes, rate_limit, qualified, max_body_bytes)
+    end
+
+    def self.public_mounts : Array(PublicMount)
+      @@public_mounts.values
+    end
+
+    # Montage public d'un code d'adresse (`form`, casse indifférente).
+    def self.public_mount?(code : String) : PublicMount?
+      @@public_mounts[code.upcase]?
+    end
+
+    # Specs : retire un montage public déclaré par un exemple.
+    def self.unmount_public(code : String) : Nil
+      @@public_mounts.delete(code)
+    end
+
+    # L'extension d'un montage public est-elle installée et active ?
+    def self.public_active?(mount : PublicMount) : Bool
+      view = Partiduo::Api::Modules.get(Partiduo::Api::Actor.system, mount.code)
+      view.kind == "extension" && view.active
+    rescue Partiduo::Api::NotFound
+      false
+    end
+
     # Compteur d'une entrée de menu d'extension (ADR-005 D8 : nombre de
     # justificatifs à traiter) : affiché à côté de l'entrée du menu et, s'il
     # est positif, repris dans « À traiter » du tableau de bord
@@ -307,6 +413,13 @@ module PartiduoUi
         next if @@drawn.includes?(mount.code)
         map.path mount.path, mount.routes, name: mount.namespace
         @@drawn << mount.code
+      end
+      # Routes publiques (A-FRM-1) : ajoutées après la règle générale
+      # `/p/<code>/<chemin>`, pour le nommage seulement.
+      @@public_mounts.each_value do |mount|
+        next if @@public_drawn.includes?(mount.code)
+        map.path mount.path, mount.routes, name: mount.namespace
+        @@public_drawn << mount.code
       end
     end
 

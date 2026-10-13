@@ -140,8 +140,10 @@ module PartiduoUi
       menu = FolderKind.relabel(SimpleMode.without(Partiduo::Api::Modules.menu(actor), SimpleMode.hidden_menus(request)),
         FolderKind.of(request))
       counts = Extensions.counts(actor)
+      menu_sections = simple_module ? SimpleMode.sections(menu, request.path, counts, simple_module) : sections(menu, extension_codes(actor), request.path, counts)
+      approvals_section(actor, request.path).try { |section| menu_sections << section }
       shell = new(
-        sections: simple_module ? SimpleMode.sections(menu, request.path, counts, simple_module) : sections(menu, extension_codes(actor), request.path, counts),
+        sections: menu_sections,
         company_name: settings.try(&.company_name.presence),
         company_detail: detail,
         user_name: session.full_name,
@@ -205,6 +207,21 @@ module PartiduoUi
           Section.new(entry.code, entry.label_key, items)
         end
       end
+    end
+
+    # Entrée « Approbations » (A-SEPA-3), propre à l'interface : présente
+    # quand l'utilisateur a des demandes en attente à décider ou qu'il a
+    # soumises, avec le nombre de celles qu'il peut approuver. Elle ne
+    # s'ajoute pas au menu des manifestes : rien n'y paraît dans un dossier
+    # dont aucune extension ne soumet d'opération.
+    def self.approvals_section(actor : Partiduo::Api::Actor, path : String) : Section?
+      pending = Partiduo::Api::Approvals.pending(actor)
+      return if pending.empty?
+      url = Marten.routes.reverse("core:approvals")
+      count = Partiduo::Api::Approvals.pending_count(actor)
+      Section.new("APPROVALS", nil, [Item.new("APPROVALS", "ui.approvals.title", url, active?(url, path), nil, count)])
+    rescue Partiduo::Api::AccessDenied
+      nil
     end
 
     # URL d'un nom de route du manifeste ; `nil` si l'interface ne le
