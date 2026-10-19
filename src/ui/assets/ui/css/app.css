@@ -181,7 +181,7 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
 .pd-dl dt { color: var(--pd-muted); }
 .pd-dl dd { margin: 0; }
 .pd-code-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem 1.5rem; margin: 1rem 0; padding-inline-start: 1.5rem; }
-.pd-code-list code { font-size: 1rem; letter-spacing: .06em; background: transparent; color: var(--pd-ink); }
+.pd-code-list code { font-size: 1rem; letter-spacing: .06em; background: transparent; color: var(--pd-ink); white-space: nowrap; }
 
 /* Écrans du référentiel : listes, filtres, tableaux triables, formulaires, consultations */
 .pd-list-head { flex-wrap: wrap; }

@@ -227,7 +227,8 @@ nl:
       no_passkey: "Geen toegangssleutel geregistreerd."
       add_passkey: "Een toegangssleutel toevoegen"
     codes:
-      filename: "partiduo-herstelcodes.txt"
+      filename: "herstelcodes-%{host}.txt"
+      file_header: "Herstelcodes voor uw account op %{host}: elke code werkt één keer, alleen voor dit dossier."
       title: "Herstelcodes"
       once: "Deze codes worden nooit meer getoond. Bewaar ze nu, buiten dit toestel."
       help: "Elke code werkt één keer, in plaats van de code van de authenticatie-app, als u uw toestel verliest."

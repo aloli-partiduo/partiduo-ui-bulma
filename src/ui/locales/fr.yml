@@ -227,7 +227,8 @@ fr:
       no_passkey: "Aucune clé d'accès enregistrée."
       add_passkey: "Ajouter une clé d'accès"
     codes:
-      filename: "partiduo-codes-de-recuperation.txt"
+      filename: "codes-de-recuperation-%{host}.txt"
+      file_header: "Codes de récupération de votre compte sur %{host} : chacun sert une seule fois, pour ce dossier seulement."
       title: "Codes de récupération"
       once: "Ces codes ne seront plus jamais affichés. Conservez-les maintenant, hors de cet appareil."
       help: "Chaque code sert une seule fois, à la place du code de l'application d'authentification, si vous perdez votre appareil."

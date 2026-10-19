@@ -18,11 +18,17 @@ module PartiduoUi
       page("ui/account/recovery_codes.html", codes_values(codes, continue_url), status)
     end
 
+    # Les codes valent pour le compte de l'utilisateur dans CE dossier (chaque
+    # instance a ses comptes) : le nom du fichier et sa première ligne disent
+    # lequel, pour qui gère plusieurs dossiers.
     def codes_values(codes : Array(String), continue_url : String) : Hash(String, String | Array(String))
+      host = request.host
+      text = "#{I18n.t("ui.codes.file_header", host: host)}\r\n\r\n#{codes.join("\r\n")}\r\n"
       {
-        "codes"        => codes,
-        "codes_href"   => "data:text/plain;charset=utf-8,#{URI.encode_path_segment(codes.join("\r\n") + "\r\n")}",
-        "continue_url" => continue_url,
+        "codes"          => codes,
+        "codes_href"     => "data:text/plain;charset=utf-8,#{URI.encode_path_segment(text)}",
+        "codes_filename" => I18n.t("ui.codes.filename", host: host),
+        "continue_url"   => continue_url,
       }
     end
   end

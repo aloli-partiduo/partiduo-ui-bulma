@@ -71,6 +71,9 @@ describe "Sécurité du compte (ADR-002 D6)" do
     body.should contain(%(action="/account/recovery-codes"))
     codes = browser.post("/account/recovery-codes").html
     codes.scan(/<li><code>[^<]+<\/code><\/li>/).size.should eq(10)
+    # Fichier nommé d'après le dossier, qui le rappelle en première ligne.
+    codes.should match(/download="codes-de-recuperation-[a-z0-9.-]+\.txt"/)
+    codes.should contain(URI.encode_path_segment("Codes de récupération de votre compte sur "))
   end
 
   it "renvoie un comptable (niveau 3 exigé) vers l'élévation, sans accès aux écrans" do

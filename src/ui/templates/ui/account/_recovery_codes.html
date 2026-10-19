@@ -4,7 +4,7 @@
   <p>{% translate "ui.codes.help" %}</p>
   <ol class="pd-code-list">{% for code in codes %}<li><code>{{ code }}</code></li>{% endfor %}</ol>
   <div class="buttons">
-    <a class="button pd-touch" download="{% translate 'ui.codes.filename' %}" href="{{ codes_href }}">{% include "ui/_icon.html" with name="download" %}<span>{% translate "ui.codes.download" %}</span></a>
+    <a class="button pd-touch" download="{{ codes_filename }}" href="{{ codes_href }}">{% include "ui/_icon.html" with name="download" %}<span>{% translate "ui.codes.download" %}</span></a>
     <button class="button pd-touch" type="button" data-pd-print>{% include "ui/_icon.html" with name="printer" %}<span>{% translate "ui.codes.print" %}</span></button>
     <a class="button is-primary pd-touch" href="{{ continue_url }}">{% translate "ui.codes.continue" %}</a>
   </div>

@@ -227,7 +227,8 @@ en:
       no_passkey: "No passkey registered."
       add_passkey: "Add a passkey"
     codes:
-      filename: "partiduo-recovery-codes.txt"
+      filename: "recovery-codes-%{host}.txt"
+      file_header: "Recovery codes for your account on %{host}: each works once, for this company file only."
       title: "Recovery codes"
       once: "These codes will never be shown again. Keep them now, away from this device."
       help: "Each code works once, instead of the authenticator app code, if you lose your device."
