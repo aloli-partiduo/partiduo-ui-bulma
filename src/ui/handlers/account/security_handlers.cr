@@ -71,6 +71,7 @@ module PartiduoUi
         "security_required_level"   => overview.required_level.to_s,
         "security_achievable_level" => overview.achievable_level.to_s,
         "security_elevation"        => session.level < overview.required_level,
+        "security_connect_url"      => connect_elevation_url(overview.required_level, reverse("account_security")),
         "security_has_password"     => overview.has_password,
         "security_has_totp"         => overview.methods.includes?("totp"),
         "security_has_passkey"      => overview.methods.includes?("passkey"),

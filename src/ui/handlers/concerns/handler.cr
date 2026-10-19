@@ -221,3 +221,19 @@ module PartiduoUi
     end
   end
 end
+
+module PartiduoUi
+  abstract class Handler
+    # Élévation ou ré-authentification par connect (ADR-012) pour une
+    # session qu'il a ouverte : connect fait monter au niveau demandé
+    # (`acr`) — passkey pour le niveau 3 — et, avec `fresh`, redemande
+    # l'authentification. `nil` si la session n'est pas une session connect.
+    def connect_elevation_url(level : Int32, next_path : String, fresh : Bool = false) : String?
+      session = Current.for(request).session
+      return unless session && session.method == "federated" && Partiduo::Api::Auth.connect_configured?
+      values = {"acr" => level.to_s, "next" => next_path}
+      values["fresh"] = "1" if fresh
+      "#{reverse("login_federated", code: Partiduo::Api::Auth::CONNECT_PROVIDER)}?#{URI::Params.encode(values)}"
+    end
+  end
+end

@@ -32,6 +32,7 @@
   <header><h2 id="pd-elevate-title">{% translate "ui.security.elevate_title" %}</h2></header>
   <div class="pd-body">
     <p class="mb-3">{% translate "ui.security.elevate_help" required: security_required_level %}</p>
+    {% if security_connect_url %}<a class="button is-primary pd-touch mb-3" href="{{ security_connect_url }}">{% translate "ui.security.elevate_connect" %}</a>{% endif %}
     {% if security_has_passkey %}
     <button type="button" class="button is-primary pd-touch" data-passkey="elevate"
             data-options-url="{% url 'account_elevate_passkey_options' %}" data-submit-url="{% url 'account_elevate_passkey' %}"

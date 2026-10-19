@@ -1,15 +1,31 @@
-{# SPDX-License-Identifier: AGPL-3.0-or-later. Lien d'invitation : confirmation explicite avant d'ouvrir la session d'enrôlement. #}{% extend "ui/auth/base.html" %}
+{# SPDX-License-Identifier: AGPL-3.0-or-later. Lien d'invitation : confirmation explicite avant d'ouvrir la session d'enrôlement ; avec connect (ADR-012 D6), création du compte Partiduo ou connexion à celui qu'on a déjà, qui sera lié à cet accès. #}{% extend "ui/auth/base.html" %}
 {% block title %}{% translate "ui.invitation.title" %}{% endblock title %}
 {% block content %}
 <h1 class="pd-auth-title">{% translate "ui.invitation.title" %}</h1>
 {% include "ui/_base_errors.html" %}
 {% if errors.base %}
 <p><a href="{% url 'login' %}">{% translate "ui.invitation.to_login" %}</a></p>
-{% else %}
+{% elsif invitation_connect %}
+<p class="mb-4">{% translate "ui.invitation.connect_intro" email: invitation_email %}</p>
+{% if invitation_signup_url %}
+<section class="mb-4" aria-labelledby="pd-signup-title">
+  <h2 id="pd-signup-title" class="title is-6">{% translate "ui.invitation.connect_new_title" %}</h2>
+  <p class="mb-2">{% translate "ui.invitation.connect_new_help" %}</p>
+  <a class="button is-primary pd-touch" href="{{ invitation_signup_url }}">{% translate "ui.invitation.connect_new" %}</a>
+</section>
+{% endif %}
+<section aria-labelledby="pd-existing-title">
+  <h2 id="pd-existing-title" class="title is-6">{% translate "ui.invitation.connect_existing_title" %}</h2>
+  <a class="button{% if invitation_signup_url %} is-light{% else %} is-primary{% endif %} pd-touch" href="{{ connect_path }}">{% translate "ui.invitation.connect_existing" %}</a>
+</section>
+{% elsif invitation_valid %}
 <p class="mb-4">{% translate "ui.invitation.intro" %}</p>
 <form method="post">
   {% csrf_input %}
   <button class="button is-primary pd-touch" type="submit">{% translate "ui.invitation.accept" %}</button>
 </form>
+{% else %}
+<p class="mb-4" role="alert">{% translate "auth.errors.token.invalid" %}</p>
+<p><a href="{% url 'login' %}">{% translate "ui.invitation.to_login" %}</a></p>
 {% endif %}
 {% endblock content %}

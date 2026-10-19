@@ -233,6 +233,7 @@ module PartiduoUi
         "has_passkey" => overview.methods.includes?("passkey"),
         "action"      => reverse("core:approval_reauth", id: id),
         "back"        => approval_url(id),
+        "connect_url" => connect_elevation_url(overview.required_level, approval_url(id), fresh: true),
         "errors"      => errors,
       }, status)
     end

@@ -8,6 +8,7 @@
   <header><h2 id="pd-reauth-title">{{ summary }}{% if amount %} · <span class="pd-mono">{{ amount }}</span>{% endif %}</h2></header>
   <div class="pd-body">
     <p class="mb-3">{% translate "ui.approvals.reauth_help" minutes: minutes %}</p>
+    {% if connect_url %}<a class="button is-primary pd-touch mb-3" href="{{ connect_url }}">{% translate "ui.approvals.reauth_connect" %}</a>{% endif %}
     {% if has_passkey %}
     <button type="button" class="button is-primary pd-touch" data-passkey="elevate"
             data-options-url="{% url 'account_elevate_passkey_options' %}" data-submit-url="{% url 'account_elevate_passkey' %}"

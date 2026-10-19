@@ -88,3 +88,27 @@ describe "Enrôlement par invitation (ADR-002 D6, D7)" do
     fine.should contain("Ce mot de passe respecte les règles.")
   end
 end
+
+describe "Invitation avec connect (ADR-012 D6)" do
+  it "propose de se connecter avec le compte Partiduo, garde l'invitation et part vers connect" do
+    # connect réglé mais injoignable ici : l'invitation reste valable, sans
+    # lien de création de compte.
+    ENV["PARTIDUO_CONNECT_URL"] = "http://127.0.0.1:9"
+    ENV["PARTIDUO_CONNECT_CLIENT_ID"] = "demo"
+    ENV["PARTIDUO_CONNECT_CLIENT_SECRET"] = "secret-du-dossier"
+    browser, token = invited("carol@example.com")
+    page = browser.get("/invitation/#{token}").html
+    page.should contain("carol@example.com")
+    page.should contain(%(href="/invitation/#{token}/connect"))
+    browser.post("/invitation/#{token}").headers["Location"].should eq("/invitation/#{token}/connect")
+    start = browser.get("/invitation/#{token}/connect")
+    start.headers["Location"].should eq("/login/federated/connect?login_hint=carol%40example.com")
+    browser.cookie(PartiduoUi::Current::INVITATION_COOKIE).should eq(token)
+  ensure
+    %w[PARTIDUO_CONNECT_URL PARTIDUO_CONNECT_CLIENT_ID PARTIDUO_CONNECT_CLIENT_SECRET].each { |name| ENV.delete(name) }
+  end
+
+  it "refuse un jeton de déconnexion par canal arrière illisible" do
+    PartiduoUi::Browser.new.post("/login/federated/connect/backchannel-logout", {"logout_token" => "faux"}).status.should eq(400)
+  end
+end

@@ -20,6 +20,10 @@ module PartiduoUi
     # Cookie de la page demandée avant une connexion fédérée.
     FEDERATED_NEXT_COOKIE = "partiduo_federated_next"
 
+    # Cookie de l'invitation acceptée par une connexion connect (ADR-012 D6),
+    # repassée au retour pour lier le compte connect à l'invité.
+    INVITATION_COOKIE = "partiduo_invitation"
+
     getter token : String?
     getter actor : Partiduo::Api::Actor
     getter session : Partiduo::Api::Auth::SessionView?

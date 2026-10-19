@@ -134,9 +134,14 @@ module PartiduoUi
     end
   end
 
+  # Déconnexion. Une session ouverte par connect (ADR-012 D8) se ferme
+  # aussi chez connect, qui ferme celles des autres dossiers : la
+  # déconnexion est unique.
   class LogoutHandler < Handler
     def post
+      connect = Partiduo::Api::Auth.federated_logout_url(request.cookies[Current::COOKIE]?.presence, request.host.to_s)
       Current.close(request)
+      return go(connect) if connect
       flash["success"] = I18n.t("ui.login.logged_out")
       go(reverse("login"))
     end
@@ -145,12 +150,29 @@ module PartiduoUi
   # Invitation (ADR-002 D6, D7) : le lien reçu par courriel ouvre une session
   # d'enrôlement. Un GET ne consomme rien (aperçus de liens, antivirus) : il
   # affiche un bouton qui confirme.
+  #
+  # Avec connect (ADR-012 D6), l'invitation lie un compte connect : la page
+  # propose de le créer (lien de connect, qui exige le code transmis par un
+  # autre canal) ou de se connecter à celui qu'on a déjà.
   class InvitationHandler < Handler
     def get
-      page("ui/auth/invitation.html", {"errors" => {} of String => Array(String)})
+      token = params["token"].to_s
+      invitation = Partiduo::Api::Auth.invitation_view(Partiduo::Api::Actor.anonymous, token)
+      # Valeurs à plat : les gabarits de Marten ne lisent pas les vues du
+      # contrat.
+      page("ui/auth/invitation.html", {
+        "errors"                => {} of String => Array(String),
+        "invitation_valid"      => !invitation.nil?,
+        "invitation_connect"    => invitation.try(&.connect) || false,
+        "invitation_email"      => invitation.try(&.email) || "",
+        "invitation_signup_url" => invitation.try(&.signup_url).presence,
+        "connect_path"          => reverse("invitation_connect", token: token),
+      })
     end
 
     def post
+      invitation = Partiduo::Api::Auth.invitation_view(Partiduo::Api::Actor.anonymous, params["token"].to_s)
+      return go(reverse("invitation_connect", token: params["token"].to_s)) if invitation.try(&.connect)
       result = Partiduo::Api::Auth.accept_invitation(Partiduo::Api::Actor.anonymous, params["token"].to_s,
         Current.login_context(request))
       return page("ui/auth/invitation.html", {"errors" => errors_of(result)}, 422) if result.failure?
@@ -181,7 +203,11 @@ module PartiduoUi
       code = params["code"].to_s
       provider = Partiduo::Api::Auth.login_providers(Partiduo::Api::Actor.anonymous).find(&.code.==(code))
       raise Partiduo::Api::NotFound.new("identity_provider", code) unless provider
-      start = Partiduo::Api::Auth.begin_federated_login(Partiduo::Api::Actor.anonymous, code)
+      # Élévation (`acr`), ré-authentification d'une approbation (`fresh`),
+      # invitation (`login_hint`) : connect, ADR-012.
+      options = Partiduo::Api::Auth::FederatedOptions.new(acr: query("acr").to_i? || 0, fresh: query("fresh") == "1",
+        login_hint: query("login_hint"))
+      start = Partiduo::Api::Auth.begin_federated_login(Partiduo::Api::Actor.anonymous, code, options)
       secure = Current.secure_cookies?(request)
       same_site = provider.kind == "saml" && secure ? "None" : "Lax"
       request.cookies.set(Current::FEDERATED_COOKIE, start.request_id, expires: 10.minutes.from_now, http_only: true,
@@ -214,13 +240,48 @@ module PartiduoUi
       next_path = Navigation.safe_path(request.cookies[Current::FEDERATED_NEXT_COOKIE]?.presence) || reverse("core:dashboard")
       request.cookies.delete(Current::FEDERATED_COOKIE)
       request.cookies.delete(Current::FEDERATED_NEXT_COOKIE)
+      invitation = request.cookies[Current::INVITATION_COOKIE]?.presence
+      request.cookies.delete(Current::INVITATION_COOKIE) if invitation
       result = Partiduo::Api::Auth.login_federated(Partiduo::Api::Actor.anonymous, code, handle,
-        payload.reject { |_, value| value.empty? }, Current.login_context(request))
+        payload.reject { |_, value| value.empty? }, Current.login_context(request), invitation_token: invitation)
       if view = result.value?
         return go(LoginFlow.destination(request, view, next_path))
       end
       flash["danger"] = result.errors.map { |error| I18n.t(error.key, error.params) }.join(" ")
       go(reverse("login"))
+    end
+  end
+
+  # Invitation acceptée par connect (ADR-012 D6) : l'invitation est gardée
+  # dans un cookie le temps de la connexion ; au retour, le cœur lie le
+  # compte connect à l'invité si l'adresse vérifiée par connect est la
+  # sienne. Sert aussi de retour après la création du compte chez connect.
+  class InvitationConnectHandler < Handler
+    def get
+      token = params["token"].to_s
+      invitation = Partiduo::Api::Auth.invitation_view(Partiduo::Api::Actor.anonymous, token)
+      unless invitation && invitation.connect
+        flash["danger"] = I18n.t("auth.errors.token.invalid")
+        return go(reverse("login"))
+      end
+      request.cookies.set(Current::INVITATION_COOKIE, token, expires: 15.minutes.from_now, http_only: true,
+        secure: Current.secure_cookies?(request), same_site: "Lax")
+      go("#{reverse("login_federated", code: Partiduo::Api::Auth::CONNECT_PROVIDER)}?login_hint=#{URI.encode_www_form(invitation.email)}")
+    end
+  end
+
+  # Déconnexion par canal arrière (OpenID Connect Back-Channel Logout,
+  # ADR-012 D8) : connect annonce la fin d'une session ; le cœur vérifie le
+  # jeton et ferme les sessions du dossier qu'elle avait ouvertes. Sans
+  # cookie ni jeton CSRF : le jeton signé fait foi.
+  class LoginFederatedLogoutHandler < Handler
+    protect_from_forgery false
+
+    def post
+      closed = Partiduo::Api::Auth.federated_backchannel_logout(params["code"].to_s, field("logout_token"))
+      response = Marten::HTTP::Response.new(content: "", status: closed.nil? ? 400 : 200)
+      response.headers["Cache-Control"] = "no-store"
+      response
     end
   end
 end
