@@ -1,4 +1,4 @@
-{# SPDX-License-Identifier: AGPL-3.0-or-later. Coquille de l'écran (maquette de référence, ADR-005 D5) : barre supérieure, menu latéral des modules actifs puis des extensions, zone de contenu (titre, fil d'Ariane, actions, onglets de l'écran « Foyer » d'un dossier foyer). #}<!DOCTYPE html>
+{# SPDX-License-Identifier: AGPL-3.0-or-later. Coquille de l'écran (maquette de référence, ADR-005 D5) : barre supérieure, menu latéral des modules actifs puis des extensions (rubriques repliables, D-UI-078), zone de contenu (titre, fil d'Ariane, actions, onglets de l'écran « Foyer » d'un dossier foyer). #}<!DOCTYPE html>
 <html lang="{{ locale }}">
   <head>
 {% include "ui/_head.html" %}
@@ -71,12 +71,14 @@
 
       <nav class="pd-side menu" id="pd-side" aria-label="{% translate 'ui.shell.navigation' %}">
         {% for section in shell.sections %}
-        {% if section.label_key %}<p class="menu-label" id="pd-menu-{{ section.code }}">{% translate section.label_key %}</p>{% endif %}
-        <ul class="menu-list"{% if section.label_key %} aria-labelledby="pd-menu-{{ section.code }}"{% endif %}>
+        {% if section.label_key %}<div class="pd-menu-group{% if section.current %} is-current{% else %} is-collapsed{% endif %}" data-pd-section="{{ section.code }}">
+        <p class="menu-label"><span class="pd-menu-title pd-nojs">{% translate section.label_key %}</span><button class="pd-menu-toggle pd-jsonly" type="button" aria-expanded="{% if section.current %}true{% else %}false{% endif %}" aria-controls="pd-menu-list-{{ section.code }}" title="{% if section.current %}{{ section.collapse_label }}{% else %}{{ section.expand_label }}{% endif %}" data-pd-section-toggle data-pd-expand="{{ section.expand_label }}" data-pd-collapse="{{ section.collapse_label }}"><span id="pd-menu-{{ section.code }}">{% translate section.label_key %}</span>{% include "ui/_icon.html" with name="chevron-down" %}</button></p>
+        {% endif %}<ul class="menu-list"{% if section.label_key %} id="pd-menu-list-{{ section.code }}" aria-labelledby="pd-menu-{{ section.code }}"{% endif %}>
           {% for item in section.items %}
           <li>{% if item.disabled %}<span class="pd-menu-off" aria-disabled="true"><span>{% translate item.label_key %}<span class="is-sr-only"> ({% translate "ui.shell.unavailable" %})</span></span>{% if item.badge %}<span class="pd-ext">{{ item.badge }}</span>{% endif %}</span>{% else %}<a href="{{ item.url }}"{% if item.active %} class="is-active" aria-current="page"{% endif %}><span>{% translate item.label_key %}</span>{% if item.count %}<span class="pd-count" data-pd-count="{{ item.code }}">{{ item.count }}</span>{% endif %}{% if item.badge %}<span class="pd-ext">{{ item.badge }}</span>{% endif %}</a>{% endif %}</li>
           {% endfor %}
-        </ul>
+        </ul>{% if section.label_key %}
+        </div>{% endif %}
         {% endfor %}
       </nav>
 

@@ -7,6 +7,8 @@ en:
       credit: "a creation by"
       menu: "Menu"
       navigation: "Main navigation"
+      section_expand: "Expand the %{section} section"
+      section_collapse: "Collapse the %{section} section"
       tagline: "free accounting"
       skip: "Skip to content"
       period_group: "Current financial year and period"

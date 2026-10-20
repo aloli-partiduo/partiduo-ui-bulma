@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later
    Liaison de la coquille au navigateur (DECISIONS D-UI-005), sans logique
-   d'écran : repli du menu latéral (tablette, téléphone), raccourci Ctrl+K
+   d'écran : repli du menu latéral (tablette, téléphone), rubriques du menu
+   repliables (D-UI-078), raccourci Ctrl+K
    (⌘K) vers la recherche, impression des codes, confirmation des commandes
    (data-pd-confirm). Aucun envoi de formulaire au changement d'une liste
    (WCAG 3.2.2) : langue, période et catégorie ont leur bouton « Appliquer ».
@@ -8,6 +9,9 @@
 (function () {
   "use strict";
   var KEY = "partiduo.menu.collapsed";
+  // Rubriques dépliées (1) ou repliées (0) par l'utilisateur, par code de
+  // rubrique : gardées sur le poste, d'une page et d'une visite à l'autre.
+  var SECTIONS = "partiduo.menu.sections";
 
   function app() { return document.getElementById("pd-app"); }
 
@@ -37,20 +41,116 @@
     sync();
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
+  /* Rubriques repliables (D-UI-078). Le serveur rend la rubrique de la page
+     affichée dépliée (is-current) et les autres repliées (is-collapsed,
+     aria-expanded="false") ; la feuille de style ne les masque qu'avec la
+     classe pd-js, posée ici : sans JavaScript, tout reste déplié. S'y ajoute
+     le choix de l'utilisateur gardé dans localStorage ; la rubrique de la
+     page affichée est toujours dépliée à l'arrivée. */
+  function readSections() {
+    try {
+      var value = JSON.parse(window.localStorage.getItem(SECTIONS) || "{}");
+      return value && typeof value === "object" ? value : {};
+    } catch (e) { return {}; /* stockage indisponible ou valeur illisible */ }
+  }
+
+  function storeSection(code, open) {
+    try {
+      var value = readSections();
+      value[code] = open ? 1 : 0;
+      window.localStorage.setItem(SECTIONS, JSON.stringify(value));
+    } catch (e) { /* stockage indisponible : le choix vaut pour la page */ }
+  }
+
+  function setSection(group, open) {
+    group.classList.toggle("is-collapsed", !open);
+    var button = group.querySelector("[data-pd-section-toggle]");
+    if (!button) return;
+    button.setAttribute("aria-expanded", open ? "true" : "false");
+    var title = button.getAttribute(open ? "data-pd-collapse" : "data-pd-expand");
+    if (title) button.setAttribute("title", title);
+  }
+
+  function applySections(scope) {
+    var stored = readSections();
+    scope.querySelectorAll("[data-pd-section]").forEach(function (group) {
+      setSection(group, group.classList.contains("is-current") || stored[group.getAttribute("data-pd-section")] === 1);
+    });
+  }
+
+  function toggleSection(button) {
+    var group = button.closest("[data-pd-section]");
+    if (!group) return;
+    var open = group.classList.contains("is-collapsed");
+    setSection(group, open);
+    storeSection(group.getAttribute("data-pd-section"), open);
+  }
+
+  // Même règle que `Shell.active?` : « / » seul pour le tableau de bord,
+  // sinon le chemin lui-même ou une page en dessous.
+  function activeFor(url, path) {
+    return url === "/" ? path === "/" : (path === url || path.indexOf(url.replace(/\/+$/, "") + "/") === 0);
+  }
+
+  /* Adresse changée par HTMX sans rechargement (hx-push-url) : l'entrée
+     active et sa rubrique suivent, si une entrée du menu correspond au
+     nouveau chemin ; sinon le marquage du serveur reste. */
+  var shownPath = window.location.pathname;
+  function followPath() {
+    var path = window.location.pathname;
+    if (path === shownPath) return;
+    shownPath = path;
+    var side = document.getElementById("pd-side");
+    if (!side) return;
+    var links = Array.prototype.slice.call(side.querySelectorAll(".menu-list a[href]"));
+    var found = null;
+    links.forEach(function (link) {
+      if (activeFor(link.getAttribute("href"), path) && (!found || link.getAttribute("href").length > found.getAttribute("href").length)) found = link;
+    });
+    if (!found) return;
+    links.forEach(function (link) {
+      var active = link === found;
+      link.classList.toggle("is-active", active);
+      if (active) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+    });
+    side.querySelectorAll("[data-pd-section]").forEach(function (group) {
+      var current = group.contains(found);
+      group.classList.toggle("is-current", current);
+      if (current) setSection(group, true);
+    });
+  }
+
+  function start() {
     document.documentElement.classList.add("pd-js");
     var root = app();
     try {
       if (root && window.localStorage.getItem(KEY) === "1") root.classList.add("is-menu-collapsed");
     } catch (e) { /* stockage indisponible */ }
+    applySections(document);
     sync();
     window.matchMedia("(max-width: 767.98px)").addEventListener("change", sync);
+  }
+
+  // Script différé : le document est déjà lu, les rubriques sont réglées
+  // avant le premier affichage autant que possible.
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+
+  // Menu remplacé par HTMX (contenu chargé, retour dans l'historique) :
+  // rubriques réglées de nouveau, entrée active suivie.
+  document.addEventListener("htmx:load", function (event) {
+    var element = event.target;
+    if (element instanceof Element && (element.matches("[data-pd-section]") || element.querySelector("[data-pd-section]"))) applySections(element);
   });
+  document.addEventListener("htmx:historyRestore", function () { shownPath = null; applySections(document); followPath(); });
+  document.addEventListener("htmx:pushedIntoHistory", followPath);
+  document.addEventListener("htmx:replacedInHistory", followPath);
 
   document.addEventListener("click", function (event) {
     var target = event.target;
     if (!(target instanceof Element)) return;
     if (target.closest("[data-pd-menu-toggle]")) { toggleMenu(); return; }
+    var section = target.closest("[data-pd-section-toggle]");
+    if (section) { toggleSection(section); return; }
     if (target.closest("[data-pd-print]")) { window.print(); }
   });
 

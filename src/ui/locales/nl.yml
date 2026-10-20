@@ -7,6 +7,8 @@ nl:
       credit: "een creatie van"
       menu: "Menu"
       navigation: "Hoofdnavigatie"
+      section_expand: "Sectie %{section} openklappen"
+      section_collapse: "Sectie %{section} dichtklappen"
       tagline: "vrije boekhouding"
       skip: "Naar de inhoud"
       period_group: "Huidig boekjaar en huidige periode"

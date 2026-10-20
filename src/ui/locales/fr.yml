@@ -7,6 +7,8 @@ fr:
       credit: "une création"
       menu: "Menu"
       navigation: "Navigation principale"
+      section_expand: "Déplier la section %{section}"
+      section_collapse: "Replier la section %{section}"
       tagline: "comptabilité libre"
       skip: "Aller au contenu"
       period_group: "Exercice et période courants"

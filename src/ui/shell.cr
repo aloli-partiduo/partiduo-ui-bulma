@@ -19,7 +19,7 @@ module PartiduoUi
       getter code : String
       getter label_key : String
       getter url : String?
-      getter active : Bool # ameba:disable Naming/QueryBoolMethods
+      property active : Bool # ameba:disable Naming/QueryBoolMethods
       getter badge : String?
       getter count : Int64?
 
@@ -42,6 +42,26 @@ module PartiduoUi
       getter items : Array(Item)
 
       def initialize(@code, @label_key, @items)
+      end
+
+      # Rubrique de la page affichée : dépliée à l'arrivée, les autres
+      # repliées (D-UI-078).
+      def current : Bool
+        items.any?(&.active)
+      end
+
+      # Description du bouton de la rubrique (`title`), selon l'action
+      # qu'il fera : « Déplier la section Saisie », « Replier… ».
+      def expand_label : String
+        action("ui.shell.section_expand")
+      end
+
+      def collapse_label : String
+        action("ui.shell.section_collapse")
+      end
+
+      private def action(key : String) : String
+        label_key.try { |label| I18n.t(key, section: I18n.t(label)) } || ""
       end
     end
 
@@ -152,6 +172,7 @@ module PartiduoUi
       path = FolderKind.menu_path(request.path, household)
       menu_sections = simple_module ? SimpleMode.sections(menu, path, counts, simple_module) : sections(menu, extension_codes(actor), path, counts)
       approvals_section(actor, request.path).try { |section| menu_sections << section }
+      most_specific(menu_sections)
       shell = new(
         sections: menu_sections,
         company_name: settings.try(&.company_name.presence),
@@ -222,6 +243,18 @@ module PartiduoUi
           Section.new(entry.code, entry.label_key, items)
         end
       end
+    end
+
+    # Une seule entrée active, la plus précise, quand plusieurs
+    # correspondent au chemin : sur `/accounting/entries/financial`,
+    # « Financier » (Saisie) et non aussi « Écritures » (`/accounting/entries`,
+    # Consultation). Sa rubrique est la seule dépliée (D-UI-078).
+    def self.most_specific(sections : Array(Section)) : Array(Section)
+      active = sections.flat_map(&.items).select(&.active)
+      return sections if active.size < 2
+      best = active.max_by(&.url.to_s.size)
+      active.each { |item| item.active = false unless item.same?(best) }
+      sections
     end
 
     # Entrée « Approbations » (A-SEPA-3), propre à l'interface : présente

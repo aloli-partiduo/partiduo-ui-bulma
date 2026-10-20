@@ -38,19 +38,19 @@ describe "Coquille de l'écran (maquette, ADR-005 D5)" do
     browser = PartiduoUi::Accounts.signed_in
 
     body = browser.get("/").html
-    body.should contain(">Facturation</p>")
-    body.should contain(">Saisie</p>")
+    body.should contain(">Facturation</span><button")
+    body.should contain(">Saisie</span><button")
     body.should contain("Achats")
     body.should_not contain("Page de test")
 
     Partiduo::Api::Modules.deactivate(PartiduoUi::Accounts.system, "INVOICING").success?.should be_true
     Partiduo::Api::Modules.activate(PartiduoUi::Accounts.system, "UITEST").success?.should be_true
     body = browser.get("/").html
-    body.should_not contain(">Facturation</p>")
-    body.should contain(">Saisie</p>")
-    extensions = body.index!(">Extensions</p>")
+    body.should_not contain(">Facturation</span><button")
+    body.should contain(">Saisie</span><button")
+    extensions = body.index!(">Extensions</span><button")
     body.index!("Page de test").should be > extensions
-    body.index!(">Saisie</p>").should be < extensions
+    body.index!(">Saisie</span><button").should be < extensions
     body.should contain(%(<span class="pd-ext">UITEST</span>))
   end
 
@@ -58,9 +58,9 @@ describe "Coquille de l'écran (maquette, ADR-005 D5)" do
     profile = PartiduoUi::Accounts.profile("Lecteur", ["accounting.entry.read"])
     PartiduoUi::Accounts.create(profile: nil, profile_id: profile)
     body = PartiduoUi::Accounts.signed_in.get("/").html
-    body.should contain(">Consultation</p>")
-    body.should_not contain(">Saisie</p>")
-    body.should_not contain(">Facturation</p>")
+    body.should contain(">Consultation</span><button")
+    body.should_not contain(">Saisie</span><button")
+    body.should_not contain(">Facturation</span><button")
   end
 
   it "relie chaque entrée de menu des pièces livrées à son écran (aucune entrée désactivée)" do

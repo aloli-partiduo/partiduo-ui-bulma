@@ -16,6 +16,7 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
 /* Icônes, cibles tactiles, lien d'évitement, marque, langue, alertes et
    pages d'accès : access.css, commune avec partiduo-admin. */
 .pd-js .pd-nojs { display: none; }
+html:not(.pd-js) .pd-jsonly { display: none; }
 
 .pd-app { display: grid; grid-template-columns: 15rem minmax(0, 1fr); grid-template-rows: auto 1fr; min-height: 100vh; }
 
@@ -58,6 +59,22 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
 .pd-side .menu-list a:hover { background: var(--pd-sidebar-active-bg); color: var(--pd-sidebar-active); }
 .pd-side .menu-list a.is-active { background: var(--pd-sidebar-active-bg); color: var(--pd-sidebar-active); font-weight: 600; box-shadow: inset 3px 0 0 #7fd0e2; }
 .pd-menu-off { opacity: .7; cursor: default; }
+/* Rubriques repliables (D-UI-078) : le titre est un bouton de divulgation
+   (aria-expanded), chevron pivotant ; repliées par défaut sauf celle de la
+   page affichée. Sans JavaScript (pas de classe pd-js), titre en texte et
+   toutes les rubriques dépliées. Couleur du titre : --pd-sidebar-text plein
+   (contraste vérifié par theme_contrast_spec), sans l'opacité du libellé. */
+.pd-side .menu-label .pd-menu-toggle { display: flex; align-items: center; justify-content: space-between; gap: .5rem; width: 100%;
+  min-height: 44px; padding: .35rem .65rem; background: none; border: 0; border-radius: var(--bulma-radius);
+  color: var(--pd-sidebar-text); font: inherit; letter-spacing: inherit; text-transform: inherit; text-align: start; cursor: pointer; }
+.pd-side .pd-menu-group > .menu-label { margin-block: .2rem 0; }
+.pd-side .pd-menu-group:first-of-type > .menu-label { margin-block-start: .6rem; }
+.pd-side .menu-label .pd-menu-toggle:hover { background: var(--pd-sidebar-active-bg); color: var(--pd-sidebar-active); }
+.pd-menu-toggle .pd-icon { transition: transform .15s ease; }
+.pd-menu-toggle[aria-expanded="false"] .pd-icon { transform: rotate(-90deg); }
+.pd-menu-toggle[aria-expanded="false"]:dir(rtl) .pd-icon { transform: rotate(90deg); }
+.pd-menu-group.is-current > .menu-label .pd-menu-toggle { color: var(--pd-sidebar-active); }
+.pd-js .pd-menu-group.is-collapsed > .menu-list { display: none; }
 .pd-ext { font-size: .65rem; opacity: .85; border: 1px solid currentColor; border-radius: .25rem; padding: 0 .3rem; font-family: var(--bulma-family-code); }
 .pd-ext-light { color: var(--pd-muted); }
 .pd-count { margin-inline-start: auto; background: #7fd0e2; color: #08323c; border-radius: 1rem; font-size: .7rem; font-weight: 700; padding: 0 .45rem; font-variant-numeric: tabular-nums; }

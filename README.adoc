@@ -137,7 +137,10 @@ Coquille de la maquette de référence (ADR-005 D5), gabarit `ui/base.html` :
   l'ordre de l'ADR-005, seuls les modules actifs et les entrées permises, puis
   les extensions (badge de leur code). Un nom de route du manifeste
   (`accounting:chart`) que l'interface ne fournit pas encore donne une entrée
-  désactivée ;
+  désactivée. Chaque rubrique se replie (DECISIONS D-UI-078) : titre en
+  bouton (`aria-expanded`), seule la rubrique de la page affichée dépliée à
+  l'arrivée, choix gardé sur le poste (`localStorage`), tout déplié sans
+  JavaScript ;
 * *contenu* : fil d'Ariane, titre, actions (blocs `crumbs`, `heading`,
   `actions`, `content`).
 
