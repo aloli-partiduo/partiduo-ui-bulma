@@ -114,8 +114,8 @@ module PartiduoUi
       table = Table.new(I18n.t("ui.providers.title"), columns, rows, reverse("core:identity_providers"),
         empty_message: I18n.t("ui.providers.empty"))
       actions = kinds.map do |kind|
-        link_action(I18n.t("ui.providers.new", kind: kind_label(kind.kind)),
-          "#{reverse("core:identity_provider_new")}?#{URI::Params.encode({"kind" => kind.kind})}", "primary", "plus")
+        Screen::Action.new(I18n.t("ui.providers.new", kind: kind_label(kind.kind)),
+          "#{reverse("core:identity_provider_new")}?#{URI::Params.encode({"kind" => kind.kind})}", "get", "primary", "plus")
       end
       list_page(I18n.t("ui.providers.title"), table, providers_crumbs[0, 2], "ui.providers.csv_name", actions,
         intro: I18n.t("ui.providers.intro"))

@@ -1,19 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 require "../spec_helper"
-require "yaml"
 require "../../scripts/icon_sprite"
 
 private SPDX = "SPDX-License-Identifier: AGPL-3.0-or-later"
-
-private def flatten_keys(node : YAML::Any, prefix : String, keys : Set(String)) : Set(String)
-  if hash = node.as_h?
-    hash.each { |key, value| flatten_keys(value, prefix.empty? ? key.as_s : "#{prefix}.#{key.as_s}", keys) }
-  else
-    keys << prefix
-  end
-  keys
-end
 
 describe "Conventions du dépôt" do
   it "impose l'en-tête SPDX à chaque fichier source" do
@@ -38,13 +28,14 @@ describe "Conventions du dépôt" do
     output.to_s.lines.should eq([] of String)
   end
 
-  it "fournit les mêmes libellés d'écran en fr, en et nl (ADR-005 D7)" do
-    dir = PartiduoUi::SpecSupport.path("src", "ui", "locales")
-    keys = Partiduo::LOCALES.to_h do |locale|
-      {locale, flatten_keys(YAML.parse(File.read(File.join(dir, "#{locale}.yml")))[locale], "", Set(String).new)}
-    end
-    keys["en"].should eq(keys["fr"])
-    keys["nl"].should eq(keys["fr"])
+  it "fournit les mêmes libellés d'écran en fr, en et nl, aux mêmes interpolations (ADR-005 D7)" do
+    dirs = %w[src/ui/locales spec/fixtures/uitest/locales spec/fixtures/uipub/locales].map { |dir| PartiduoUi::SpecSupport.path(dir) }
+    dirs.flat_map { |dir| PartiduoUi::Translations.parity_failures(dir) }.should eq([] of String)
+  end
+
+  it "ne cite dans le code et les gabarits que des clés traduites en fr, en et nl" do
+    globs = %w[src/**/*.cr src/**/*.html spec/fixtures/**/*.cr]
+    PartiduoUi::Translations.unknown_keys(PartiduoUi::SpecSupport::ROOT, globs).should eq([] of String)
   end
 
   it "tient la planche d'icônes à jour (crystal run scripts/icon_sprite.cr)" do

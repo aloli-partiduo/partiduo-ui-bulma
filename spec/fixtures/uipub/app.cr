@@ -10,6 +10,11 @@ Partiduo::Modules.register do
 end
 
 module UiPub
+  # Application Marten de l'extension : ses libellés (`locales/`).
+  class App < Marten::App
+    label "uipub"
+  end
+
   # Page publique : écho du jeton ; garde son propre `Cache-Control`.
   class HelloHandler < Marten::Handlers::Base
     def get
@@ -31,3 +36,7 @@ end
 
 PartiduoUi::Extensions.public_mount "UIPUB", UiPub::PUBLIC_ROUTES,
   rate_limits: {"hello" => PartiduoUi::RateLimit::Rule.new(2, 1.minute)}, max_body_bytes: 100_i64
+
+Marten.configure :test do |config|
+  config.installed_apps = config.installed_apps + [UiPub::App] of Marten::Apps::Config.class
+end
