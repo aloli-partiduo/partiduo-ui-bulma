@@ -1,4 +1,7 @@
-/* Partiduo — thème de partiduo-ui-bulma (ADR-005 D5).
+/* SPDX-License-Identifier: AGPL-3.0-or-later
+   Partiduo — thème de partiduo-ui-bulma (ADR-005 D5), repris octet pour
+   octet par partiduo-admin (ADR-008 D1) : empreinte vérifiée par les specs
+   des deux dépôts ; ne modifier qu'ici, puis recopier.
    Toute la charte tient ici : changer de couleurs ou de polices ne touche aucun gabarit. */
 
 :root {

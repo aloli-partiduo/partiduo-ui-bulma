@@ -34,6 +34,22 @@ private def check_head(html : String) : Nil
   html.should contain(%(<meta name="theme-color" content="#0f1719" media="(prefers-color-scheme: dark)">))
 end
 
+# Bandeau et pied de page des pages d'accès, communs avec partiduo-admin :
+# « une création », ALOLI (logo, deux lignes, lien vers son site), provenance
+# du code (AGPL-3.0, art. 13).
+private def check_banner_and_footer(html : String) : Nil
+  banner = html.match!(/<div class="pd-auth-banner">.*?<\/a>\s*<\/div>/m)[0]
+  banner.should contain(%(<p class="pd-auth-credit">une création</p>))
+  banner.should contain(%(<a class="pd-auth-aloli" href="https://aloli.fr" target="_blank" rel="noopener"><img src="/assets/ui/brand/aloli-logo.svg" alt="ALOLI" width="151" height="56"><span>))
+  banner.should contain("informatique d")
+  banner.should contain("<br>à taille humaine</span></a>")
+  footer = html.match!(/<footer class="pd-foot">.*?<\/footer>/m)[0]
+  footer.should contain("Partiduo #{PartiduoUi::Licences.version} — logiciel libre sous licence AGPL-3.0")
+  footer.should contain(%(<a href="#{PartiduoUi::Licences.source_url}" target="_blank" rel="noopener">Code source</a>))
+  footer.should contain(%(<a href="/licences">Composants et licences</a>))
+  html.index!(footer).should be > html.index!("</main>")
+end
+
 # Le symbole est décoratif (alt vide) : le nom, en texte, nomme la marque une
 # seule fois pour les lecteurs d'écran.
 private def check_auth_brand(html : String) : Nil
@@ -45,6 +61,7 @@ private def check_auth_brand(html : String) : Nil
   # Dans l'en-tête (repère banner), avant le contenu principal.
   html.index!(brand).should be < html.index!(%(<main class="pd-auth"))
   html.index!(brand).should be > html.index!(%(<header class="pd-auth-top">))
+  check_banner_and_footer(html)
 end
 
 describe "Identité visuelle : favicons et marque" do
@@ -104,9 +121,19 @@ describe "Identité visuelle : favicons et marque" do
   end
 
   it "centre le logo et le nom en haut des pages hors connexion" do
-    %w[/login /password/forgotten /unlock].each do |path|
+    %w[/login /password/forgotten /unlock /unlock/inconnu /password/reset/inconnu /invitation/inconnu].each do |path|
       check_auth_brand(PartiduoUi::Browser.new.get(path).html)
     end
+  end
+
+  it "offre le code source et les licences, sans connexion" do
+    page = PartiduoUi::Browser.new.get("/licences")
+    page.status.should eq(200)
+    html = page.html
+    check_auth_brand(html)
+    html.should contain(PartiduoUi::Licences.source_url)
+    {"https://github.com/bigskysoftware/htmx", "https://github.com/jgthms/bulma", "https://github.com/opal/opal",
+     "https://github.com/lucide-icons/lucide", "https://github.com/IBM/plex"}.each { |url| html.should contain(url) }
   end
 
   it "centre le logo et le nom en haut des pages d'erreur" do

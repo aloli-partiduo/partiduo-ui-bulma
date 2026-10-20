@@ -323,6 +323,27 @@ convertit en acteur par `Api::Auth.actor`. Les passkeys passent par
 `src/ui/assets/ui/js/passkey.js` (WebAuthn, octets en base64url) : aucune règle
 n'y est codée.
 
+=== Pages d'accès communes avec partiduo-admin
+
+Connexion, second facteur, invitation, liens par courriel, erreurs et
+`/licences` ont la même mise en page que celles de `partiduo-admin` :
+sélecteur de langue, bandeau (logo, nom et mention de Partiduo, « une
+création », logo et deux lignes d'ALOLI avec lien vers aloli.fr), carte
+centrée, pied de page (version, licence, code source, composants et
+licences). Seules changent la mention sous le nom et les blocs propres à
+chaque application.
+
+Ce dépôt est l'interface de référence : `src/ui/assets/ui/css/access.css`
+(pages d'accès, icônes, cibles tactiles, pied de page), `theme.css`,
+`bulma.min.css`, `fonts.css`, la planche d'icônes et les deux logos sont
+copiés octet pour octet dans `partiduo-admin` (pas de dépendance de
+l'administration vers l'interface). `spec/ui/shared_assets_spec.cr` en
+vérifie les empreintes SHA-256, les mêmes que dans
+`spec/admin/shared_assets_spec.cr` de l'administration, et compare les
+fichiers à la copie de travail voisine quand elle est présente. Après une
+modification : recopier le fichier dans `partiduo-admin`, puis mettre à
+jour l'empreinte dans les deux specs.
+
 == Extensions (ADR-003 D3, ADR-005 D4)
 
 Le dossier `ui/bulma/` d'une extension déclare ses routes et les monte :
@@ -541,3 +562,11 @@ d'un espace `Partiduo`. Seule la composition est admise :
   source commence par `SPDX-License-Identifier: AGPL-3.0-or-later`.
 * Bulma (MIT), HTMX (0BSD), runtime Opal (MIT), IBM Plex (SIL OFL 1.1),
   Lucide (ISC) : fichiers tiers versionnés tels quels.
+* Provenance du code (AGPL-3.0, article 13) : le pied des pages d'accès
+  donne la version, la licence et le lien vers le code source
+  (`PartiduoUi::Licences.version` et `.source_url`, réglables par une
+  distribution) ; `/licences` liste les composants tiers avec leur licence,
+  leur provenance et leur texte, `THIRD-PARTY-LICENSES.txt`, assemblé par
+  `scripts/third-party-licenses.sh` (Crystal, shards du verrou, Bulma,
+  htmx, Opal, Lucide, IBM Plex ; textes dans `licenses/`) : à relancer
+  après tout changement du verrou.

@@ -13,15 +13,9 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
 .pd-side :focus-visible { outline-color: var(--pd-focus-on-dark); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 
-.pd-icon { width: 1.15em; height: 1.15em; flex: none; vertical-align: -0.2em; }
-.button .pd-icon { margin-inline-end: .35em; }
+/* Icônes, cibles tactiles, lien d'évitement, marque, langue, alertes et
+   pages d'accès : access.css, commune avec partiduo-admin. */
 .pd-js .pd-nojs { display: none; }
-.pd-touch { min-height: 44px; min-width: 44px; }
-
-/* Lien d'évitement (WCAG 2.4.1) */
-.pd-skip { position: absolute; inset-inline-start: .5rem; inset-block-start: -3rem; z-index: 100; background: var(--pd-surface);
-  color: var(--pd-ink); padding: .6rem 1rem; border-radius: var(--bulma-radius); border: 2px solid var(--pd-focus); }
-.pd-skip:focus { inset-block-start: .5rem; }
 
 .pd-app { display: grid; grid-template-columns: 15rem minmax(0, 1fr); grid-template-rows: auto 1fr; min-height: 100vh; }
 
@@ -29,14 +23,9 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
 .pd-top { grid-column: 1 / -1; display: flex; align-items: center; gap: .75rem 1rem; flex-wrap: wrap;
   background: var(--pd-surface); border-block-end: 1px solid var(--pd-rule); padding: .6rem 1rem;
   position: sticky; inset-block-start: env(safe-area-inset-top, 0px); z-index: 20; }
-/* Marque : symbole (dessiné sur la grille de 32 px, net à cette taille) et
-   nom en texte, « Parti » et « duo » aux couleurs de l'identité. Le symbole
-   est décoratif (alt="") : le nom suffit aux lecteurs d'écran. */
+/* Marque de la barre : symbole et nom (access.css), mention. */
 .pd-brand { display: flex; align-items: center; gap: .5rem; color: var(--pd-ink); letter-spacing: -.01em; }
 .pd-brand:hover { color: var(--pd-ink); }
-.pd-logo { display: block; flex: none; width: 2rem; height: 2rem; }
-.pd-name { font-weight: 600; font-size: 1.2rem; line-height: 1; color: var(--pd-brand-parti); letter-spacing: -.02em; }
-.pd-name span { color: var(--pd-brand-duo); }
 .pd-brand small { font-weight: 400; color: var(--pd-muted); font-size: .8rem; align-self: flex-end; padding-block-end: .15rem; }
 .pd-dossier { display: flex; flex-direction: column; line-height: 1.2; padding-inline-start: 1rem; border-inline-start: 1px solid var(--pd-rule); min-width: 0; }
 .pd-dossier strong { font-size: .95rem; color: var(--pd-ink); }
@@ -47,8 +36,6 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
 .pd-period-value { font-size: .9rem; font-weight: 600; color: var(--pd-ink); font-variant-numeric: tabular-nums; }
 .pd-grow { flex: 1 1 12rem; min-width: 0; }
 .pd-search .input { min-height: 44px; }
-.pd-lang { display: flex; gap: .35rem; align-items: center; }
-.pd-lang select, .pd-lang .button { min-height: 44px; }
 .pd-burger { display: none; min-width: 44px; min-height: 44px; }
 
 /* Utilisateur : menu déroulant natif (<details>), utilisable au clavier et sans survol */
@@ -98,9 +85,8 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
 /* Tableau plus large que l'écran : il défile dans son cadre, jamais la page
    (maquette, largeur téléphone). */
 .pd-scroll { overflow-x: auto; max-width: 100%; }
-.pd-message { margin-block-end: 1rem; }
-.pd-callout, .pd-alert { display: flex; gap: .75rem; align-items: flex-start; }
-.pd-callout .pd-icon, .pd-alert .pd-icon { margin-block-start: .15em; }
+.pd-callout { display: flex; gap: .75rem; align-items: flex-start; }
+.pd-callout .pd-icon { margin-block-start: .15em; }
 .pd-module-list { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: 0; padding: 0; }
 .pd-module-list li { border: 1px solid var(--pd-rule); border-radius: 1rem; padding: .2rem .75rem; background: var(--pd-row-alt); }
 .pd-counter { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
@@ -124,35 +110,8 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
 .pd-filters-row .input, .pd-filters-row select { min-height: 44px; }
 /* Dérogation à l'encours maximum (D-INV2-009) : zone de motif. */
 .pd-credit-override textarea { min-height: 5rem; }
-.pd-code { font-family: var(--bulma-family-code); letter-spacing: .15em; font-size: 1.1rem; max-width: 14rem; }
 .pd-narrow { max-width: 32rem; }
 .pd-rules { font-size: .8rem; color: var(--pd-muted); margin: 0 0 .4rem; padding-inline-start: 1.1rem; list-style: disc; }
-.pd-form-actions { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; align-items: center; }
-.pd-form-actions a { min-height: 44px; display: inline-flex; align-items: center; }
-
-/* Écrans d'authentification */
-.pd-auth-body { display: flex; flex-direction: column; min-height: 100vh; }
-/* En-tête : langue en haut à droite, puis le logo et le nom centrés. */
-.pd-auth-top { display: flex; flex-direction: column; align-items: center; gap: .5rem; padding: .6rem 1rem 0; }
-.pd-auth-top .pd-lang { align-self: flex-end; }
-.pd-auth-brand { display: flex; flex-direction: column; align-items: center; gap: .5rem; margin-block-start: .5rem; text-align: center; }
-.pd-auth-brand .pd-logo { width: 3.5rem; height: 3.5rem; }
-.pd-auth-brand .pd-name { font-size: 2rem; }
-.pd-auth-brand small { color: var(--pd-muted); font-size: .9rem; }
-.pd-auth { flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 1.5rem 1rem 3rem; }
-.pd-auth:focus { outline: none; }
-.pd-auth-card { width: 100%; max-width: 30rem; background: var(--pd-surface); border: 1px solid var(--pd-rule); border-radius: var(--bulma-radius); padding: 1.5rem; }
-.pd-auth-title { font-size: 1.4rem; font-weight: 600; color: var(--pd-ink); margin-block-end: .5rem; text-wrap: balance; }
-.pd-auth-subtitle { font-size: 1rem; font-weight: 600; color: var(--pd-ink); display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; margin-block-end: .4rem; }
-.pd-auth-block { margin-block: 1rem; }
-.pd-auth-block > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--bulma-link); font-weight: 500; }
-.pd-recommended { border: 1px solid var(--pd-rule); border-radius: var(--bulma-radius); padding: 1rem; background: var(--pd-row-alt); }
-.pd-or { display: flex; align-items: center; gap: .75rem; color: var(--pd-muted); font-size: .85rem; margin-block: 1.25rem; }
-.pd-or::before, .pd-or::after { content: ""; flex: 1; border-block-start: 1px solid var(--pd-rule); }
-/* Connexion fédérée (D-R5-010) : un bouton par fournisseur d'identité. */
-.pd-federated { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
-.pd-federated .button { min-block-size: 44px; justify-content: flex-start; }
-.pd-passkey-status:empty { display: none; }
 
 /* Sécurité du compte */
 .pd-levels { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; }
@@ -180,8 +139,6 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
 .pd-dl { display: grid; grid-template-columns: auto 1fr; gap: .25rem .75rem; font-size: .85rem; margin-block-start: .75rem; }
 .pd-dl dt { color: var(--pd-muted); }
 .pd-dl dd { margin: 0; }
-.pd-code-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem 1.5rem; margin: 1rem 0; padding-inline-start: 1.5rem; }
-.pd-code-list code { font-size: 1rem; letter-spacing: .06em; background: transparent; color: var(--pd-ink); white-space: nowrap; }
 
 /* Écrans du référentiel : listes, filtres, tableaux triables, formulaires, consultations */
 .pd-list-head { flex-wrap: wrap; }
@@ -469,17 +426,14 @@ img.pd-attachment-preview { min-height: 0; height: auto; object-fit: contain; }
   .pd-levels { grid-template-columns: minmax(0, 1fr); }
   .pd-totp-grid { grid-template-columns: minmax(0, 1fr); }
   .pd-qr-box { max-width: 13rem; }
-  .pd-code-list { grid-template-columns: minmax(0, 1fr); }
-  .pd-auth { padding-block-start: 1rem; }
-  .pd-auth-card { padding: 1rem; }
 }
 
 @media print {
-  .pd-top, .pd-side, .pd-skip, .pd-auth-top, .buttons, .notification, .pd-crumb { display: none !important; }
+  .pd-top, .pd-side, .buttons, .notification, .pd-crumb { display: none !important; }
   .pd-paper { box-shadow: none; max-width: none; padding: 0; }
   .pd-paper-wrap { background: none; padding: 0; }
   .pd-app { display: block; }
-  .pd-panel, .pd-auth-card { border: 0; }
+  .pd-panel { border: 0; }
 }
 
 /* Éditions (lot 3) : critères compacts, sous-totaux et totaux, rubriques

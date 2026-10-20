@@ -7,6 +7,7 @@ describe "Fichiers statiques servis par Marten" do
     "ui/css/bulma.min.css"               => "text/css",
     "ui/css/theme.css"                   => "text/css",
     "ui/css/fonts.css"                   => "text/css",
+    "ui/css/access.css"                  => "text/css",
     "ui/css/app.css"                     => "text/css",
     "ui/js/htmx.min.js"                  => "javascript",
     "ui/js/opal/demo.js"                 => "javascript",

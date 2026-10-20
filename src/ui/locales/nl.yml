@@ -2,6 +2,9 @@
 nl:
   ui:
     shell:
+      aloli_line_1: "Bedrijfsinformatica"
+      aloli_line_2: "op mensenmaat"
+      credit: "een creatie van"
       menu: "Menu"
       navigation: "Hoofdnavigatie"
       tagline: "vrije boekhouding"
@@ -19,6 +22,18 @@ nl:
       breadcrumb: "Kruimelpad"
       regime: "stelsel %{regime}"
       period_closed: "%{period} (afgesloten)"
+    footer:
+      free: "Partiduo %{version} — vrije software onder de AGPL-3.0-licentie"
+      licences: "Componenten en licenties"
+      source: "Broncode"
+    licences:
+      component: "Component"
+      licence: "Licentie"
+      source: "Herkomst"
+      texts: "Licentieteksten"
+      components: "Het steunt op de volgende componenten, elk onder zijn eigen licentie; hier hun herkomst en tekst:"
+      intro: "Deze software is vrij, onder de GNU AGPL-3.0 of later. De broncode staat hier:"
+      title: "Componenten en licenties"
     home:
       welcome_title: "Welkom"
       welcome: "Partiduo, boekhouding en facturatie, vrije software."

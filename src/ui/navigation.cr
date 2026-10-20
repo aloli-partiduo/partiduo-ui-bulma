@@ -70,6 +70,7 @@ module PartiduoUi
   module ErrorPage
     def self.render(request : Marten::HTTP::Request, status : Int32) : Marten::HTTP::Response
       context = Marten::Template::Context.from({"status" => status, "locale" => I18n.locale}, request)
+      Licences.footer.each { |key, value| context[key] = value }
       content = Marten.templates.get_template("ui/errors/error.html").render(context)
       Marten::HTTP::Response.new(content: content, content_type: "text/html; charset=utf-8", status: status)
     end

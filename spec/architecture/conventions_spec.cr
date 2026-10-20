@@ -23,7 +23,7 @@ describe "Conventions du dépôt" do
     missing = files.reject { |path| File.read_lines(path).first(2).any?(&.starts_with?("# #{SPDX}")) }
     missing.map { |path| Path[path].relative_to(root).to_s }.should eq([] of String)
 
-    written = Dir.glob(%w[src/ui/templates/**/*.html src/ui/locales/*.yml src/ui/assets/ui/css/app.css src/ui/assets/ui/css/fonts.css].map { |pattern| File.join(root, pattern) })
+    written = Dir.glob(%w[src/ui/templates/**/*.html src/ui/locales/*.yml src/ui/assets/ui/css/app.css src/ui/assets/ui/css/access.css src/ui/assets/ui/css/theme.css src/ui/assets/ui/css/fonts.css].map { |pattern| File.join(root, pattern) })
     written.reject { |path| File.read_lines(path).first.includes?(SPDX) }.should eq([] of String)
   end
 

@@ -439,6 +439,8 @@ Marten.routes.draw do
   path "/unlock", PartiduoUi::UnlockRequestHandler, name: "unlock_request"
   path "/unlock/<token:str>", PartiduoUi::UnlockHandler, name: "unlock"
   path "/language", PartiduoUi::LanguageHandler, name: "language"
+  # Composants tiers et licences, code source (AGPL-3.0, art. 13).
+  path "/licences", PartiduoUi::LicencesHandler, name: "licences"
 
   # Compte : enrôlement, sécurité, élévation (ADR-002 D6, D7).
   path "/account/enrollment", PartiduoUi::EnrollmentHandler, name: "account_enrollment"

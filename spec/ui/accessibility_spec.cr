@@ -163,7 +163,8 @@ describe "Mise en page adaptée à trois tailles d'écran (ADR-005 D5)" do
   end
 
   it "garde des cibles tactiles de 44 px, un focus visible et respecte la réduction des animations" do
-    css.should contain(".pd-touch { min-height: 44px; min-width: 44px; }")
+    access = File.read(PartiduoUi::SpecSupport.path("src", "ui", "assets", "ui", "css", "access.css"))
+    access.should contain(".pd-touch { min-height: 44px; min-width: 44px; }")
     css.should contain(":focus-visible { outline: 2px solid var(--pd-focus); outline-offset: 2px; }")
     css.should contain("prefers-reduced-motion: reduce")
   end

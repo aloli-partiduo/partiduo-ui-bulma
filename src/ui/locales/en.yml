@@ -2,6 +2,9 @@
 en:
   ui:
     shell:
+      aloli_line_1: "Business IT"
+      aloli_line_2: "on a human scale"
+      credit: "a creation by"
       menu: "Menu"
       navigation: "Main navigation"
       tagline: "free accounting"
@@ -19,6 +22,18 @@ en:
       breadcrumb: "Breadcrumb"
       regime: "%{regime} scheme"
       period_closed: "%{period} (closed)"
+    footer:
+      free: "Partiduo %{version} — free software under the AGPL-3.0 license"
+      licences: "Components and licenses"
+      source: "Source code"
+    licences:
+      component: "Component"
+      licence: "License"
+      source: "Origin"
+      texts: "License texts"
+      components: "It relies on the following components, each under its own license; here are their origin and text:"
+      intro: "This software is free, under the GNU AGPL-3.0 or later. Its source code is published here:"
+      title: "Components and licenses"
     home:
       welcome_title: "Welcome"
       welcome: "Partiduo, accounting and invoicing, free software."

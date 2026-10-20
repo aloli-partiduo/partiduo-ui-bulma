@@ -67,6 +67,8 @@ module PartiduoUi
     # Page complète ; `status` 422 pour un formulaire refusé.
     def page(template : String, values = {} of String => String, status : Int32 = 200) : Marten::HTTP::Response
       context["ui_path"] = request.full_path
+      # Provenance du code (AGPL-3.0, art. 13) : pied des pages d'accès.
+      Licences.footer.each { |key, value| context[key] = value }
       render(template, values, status: status)
     end
 
