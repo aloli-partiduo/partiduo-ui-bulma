@@ -129,10 +129,26 @@ fr:
       menu:
         cards_list: "Contacts"
         core_company: "Foyer"
+        acc_accounts: "Comptes et contacts"
       company:
         edit: "Modifier le foyer"
         intro: "Identité du foyer, reprise dans les mentions des documents. Le régime fiscal ne change plus après la création."
         updated: "Foyer enregistré."
+        identity: "Identité du foyer"
+        name: "Nom du foyer"
+      cards:
+        parties: "Contacts"
+        new_party: "Nouveau contact"
+        empty: "Aucun contact."
+        csv_name: "contacts"
+      accounts:
+        selection: "Compte ou contact consulté"
+        pick: "Compte ou contact"
+        intro: "Choisissez un compte ou un contact : solde, reste dû, échu et mouvements."
+        not_found: "Aucun compte ni contact « %{q} »."
+      tabs:
+        label: "Foyer"
+        identity: "Identité du foyer"
     search:
       title: "Recherche"
       query: "Recherche : « %{q} »"

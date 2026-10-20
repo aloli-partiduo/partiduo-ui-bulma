@@ -90,6 +90,21 @@ describe "Utilisateurs et profils (ADR-002 D4, ADR-006 D4)" do
     browser.post("/settings/users/#{bob.id}/access/nothing").status.should eq(404)
   end
 
+  it "rouvre l'accès en gardant une fin d'accès au jour du dossier (D-AMD-035)" do
+    browser = admin
+    bob = PartiduoUi::Accounts.create(email: "bob@example.com", profile: "ACCOUNTANT").user
+    today = Partiduo::Api::Core.today
+    input = Auth::UserInput.new(email: "bob@example.com", first_name: "Bob", last_name: "Durand", locale: "fr",
+      role: "member", profile_id: bob.profile_id, access_ends_on: today)
+    Auth.update_user(system, bob.id, input).value!.access_ends_on.should eq(today)
+    browser.post("/settings/users/#{bob.id}/access/revoke").status.should eq(302)
+    browser.post("/settings/users/#{bob.id}/access/restore").status.should eq(302)
+    restored = Auth.user(system, bob.id)
+    restored.revoked.should be_false
+    # Le dernier jour d'accès est celui du dossier : il n'est pas perdu.
+    restored.access_ends_on.should eq(today)
+  end
+
   it "règle les droits par journal d'un utilisateur" do
     browser = admin
     bob = PartiduoUi::Accounts.create(email: "bob@example.com", profile: "ACCOUNTANT").user

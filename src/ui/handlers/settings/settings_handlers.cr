@@ -18,16 +18,27 @@ module PartiduoUi
 
     PERMISSION = "core.settings.manage"
 
+    # Libellé d'un champ, dans le vocabulaire du type de dossier (« Nom du
+    # foyer » pour la raison sociale).
     def label(name : String) : String
-      I18n.t("core.settings.fields.#{name}")
+      I18n.t(kind_key("core.settings.fields.#{name}"))
+    end
+
+    # Champ montré dans ce type de dossier : un foyer n'a ni forme juridique,
+    # ni capital, ni RCS, ni SIREN, ni TVA, ni identifiant créancier
+    # (`FolderKind::BUSINESS_FIELDS`, D-FOY-009).
+    def shown?(name : String) : Bool
+      FolderKind.company_field?(FolderKind.of(request), name)
     end
 
     def company_form(input : Core::SettingsInput) : Form
-      identity = %w[company_name legal_form rcs siren vat_number creditor_identifier].map do |name|
+      identity = %w[company_name legal_form rcs siren vat_number creditor_identifier].select { |name| shown?(name) }.map do |name|
         Form::Field.new(name, label(name), value: text_of(input, name), mono: %w[siren vat_number creditor_identifier].includes?(name),
           required: name == "company_name", wide: name == "company_name")
       end
-      identity.insert(2, Form::Field.new("share_capital", label("share_capital"), "number", fmt.input_number(input.share_capital, 2), mono: true))
+      if shown?("share_capital")
+        identity.insert(2, Form::Field.new("share_capital", label("share_capital"), "number", fmt.input_number(input.share_capital, 2), mono: true))
+      end
       address = %w[street street_number postcode city country_code phone email].map do |name|
         Form::Field.new(name, label(name), name == "email" ? "email" : "text", text_of(input, name), mono: name == "country_code",
           maxlength: name == "country_code" ? 2 : nil)
@@ -51,7 +62,7 @@ module PartiduoUi
           value: (input.approval_reauth_minutes || 5).to_s, mono: true),
       ]
       Form.new([
-        Form::Group.new(I18n.t("ui.company.identity"), identity),
+        Form::Group.new(I18n.t(kind_key("ui.company.identity")), identity),
         Form::Group.new(I18n.t("ui.company.address"), address),
         Form::Group.new(I18n.t("ui.company.instance"), instance),
         Form::Group.new(label("auth_methods"), methods),
@@ -61,12 +72,16 @@ module PartiduoUi
     def read_company(current_settings : Core::SettingsView, form_errors : Array({String, String})) : Core::SettingsInput
       minutes = integer("session_duration_minutes", form_errors)
       reauth = integer("approval_reauth_minutes", form_errors, required: false)
-      capital = decimal("share_capital", form_errors)
+      # Champs d'entreprise que l'écran ne propose pas (foyer) : la saisie
+      # décrit la ligne entière, elle reprend donc les valeurs enregistrées.
+      capital = shown?("share_capital") ? decimal("share_capital", form_errors) : current_settings.share_capital
+      kept = ->(name : String, value : String) { shown?(name) ? field(name) : value }
       level = field("auth_minimum_level").to_i?
       methods = Core::AUTH_METHODS.select { |method| checkbox("auth_method:#{method}") }
       Core::SettingsInput.new(
-        company_name: field("company_name"), legal_form: field("legal_form"), share_capital: capital,
-        rcs: field("rcs"), siren: field("siren"), vat_number: field("vat_number"), street: field("street"),
+        company_name: field("company_name"), legal_form: kept.call("legal_form", current_settings.legal_form),
+        share_capital: capital, rcs: kept.call("rcs", current_settings.rcs), siren: kept.call("siren", current_settings.siren),
+        vat_number: kept.call("vat_number", current_settings.vat_number), street: field("street"),
         street_number: field("street_number"), postcode: field("postcode"), city: field("city"),
         country_code: field("country_code").upcase.presence, phone: field("phone"), email: field("email"),
         tax_regime: current_settings.tax_regime, default_locale: field("default_locale").presence,
@@ -97,15 +112,15 @@ module PartiduoUi
     def get
       settings = Core.settings(current.actor)
       identity = [
-        Screen::Item.new(label("company_name"), settings.company_name),
-        Screen::Item.new(label("legal_form"), settings.legal_form),
-        Screen::Item.new(label("share_capital"), settings.share_capital.try { |value| fmt.amount(value) } || ""),
-        Screen::Item.new(label("rcs"), settings.rcs),
-        Screen::Item.new(label("siren"), settings.siren, mono: true),
-        Screen::Item.new(label("vat_number"), settings.vat_number, mono: true),
-        Screen::Item.new(label("creditor_identifier"), settings.creditor_identifier, mono: true),
-        Screen::Item.new(label("tax_regime"), I18n.t(settings.tax_regime_key)),
-      ]
+        {"company_name", Screen::Item.new(label("company_name"), settings.company_name)},
+        {"legal_form", Screen::Item.new(label("legal_form"), settings.legal_form)},
+        {"share_capital", Screen::Item.new(label("share_capital"), settings.share_capital.try { |value| fmt.amount(value) } || "")},
+        {"rcs", Screen::Item.new(label("rcs"), settings.rcs)},
+        {"siren", Screen::Item.new(label("siren"), settings.siren, mono: true)},
+        {"vat_number", Screen::Item.new(label("vat_number"), settings.vat_number, mono: true)},
+        {"creditor_identifier", Screen::Item.new(label("creditor_identifier"), settings.creditor_identifier, mono: true)},
+        {"tax_regime", Screen::Item.new(label("tax_regime"), I18n.t(settings.tax_regime_key))},
+      ].compact_map { |(name, item)| item if shown?(name) }
       address = [
         Screen::Item.new(I18n.t("ui.company.address"),
           [[settings.street_number, settings.street].reject(&.empty?).join(" "),
@@ -125,7 +140,7 @@ module PartiduoUi
       actions = [] of Screen::Action
       actions << link_action("ui.forms.edit", reverse("core:company_edit"), "primary") if can?(PERMISSION)
       detail_page(settings.company_name, settings_crumbs("core.menu.core_company", "core:company"), [
-        Screen::Section.new(I18n.t("ui.company.identity"), identity),
+        Screen::Section.new(I18n.t(kind_key("ui.company.identity")), identity),
         Screen::Section.new(I18n.t("ui.company.address"), address),
         Screen::Section.new(I18n.t("ui.company.instance"), instance),
       ], actions, intro: I18n.t(kind_key("ui.company.intro")))

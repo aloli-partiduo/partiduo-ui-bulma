@@ -229,7 +229,10 @@ module PartiduoUi
       when "revoke"
         flash_result(Auth.revoke_access(current.actor, user.id), "ui.users.revoked", {"email" => user.email})
       when "restore"
-        flash_result(Auth.restore_access(current.actor, user.id, user.access_ends_on.try { |day| day < Time.utc ? nil : day }),
+        # Fin d'accès échue au jour du dossier (son fuseau, D-AMD-035) :
+        # rouverte sans date ; celle du jour même est gardée.
+        ends = user.access_ends_on.try { |day| day < Partiduo::Api::Core.today ? nil : day }
+        flash_result(Auth.restore_access(current.actor, user.id, ends),
           "ui.users.restored", {"email" => user.email})
       when "unlock"
         flash_result(Auth.unlock_user(current.actor, user.id), "ui.users.unlocked", {"email" => user.email})

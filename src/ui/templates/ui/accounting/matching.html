@@ -2,7 +2,7 @@
 {% block title %}{% if matching %}{{ matching.title }} · {% endif %}{{ title }}{% endblock title %}
 {% block crumbs %}{% include "ui/_crumbs.html" %}{% endblock crumbs %}
 {% block heading %}{% if matching %}{{ matching.title }}{% else %}{{ title }}{% endif %}{% endblock heading %}
-{% block actions %}{% if statement_url %}<a class="button pd-touch" href="{{ statement_url }}">{% translate "accounting.menu.acc_accounts" %}</a>{% endif %}{% endblock actions %}
+{% block actions %}{% if statement_url %}<a class="button pd-touch" href="{{ statement_url }}">{% translate statement_key %}</a>{% endif %}{% endblock actions %}
 {% block content %}
 <form class="pd-panel" method="get" action="{% url 'accounting:matching' %}" role="search" aria-label="{% translate 'ui.accounts.selection' %}">
   <div class="pd-body pd-acc-head">

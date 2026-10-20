@@ -129,10 +129,26 @@ en:
       menu:
         cards_list: "Contacts"
         core_company: "Household"
+        acc_accounts: "Accounts and contacts"
       company:
         edit: "Edit household"
         intro: "Household identity, shown in the mentions of documents. The tax regime cannot change after creation."
         updated: "Household saved."
+        identity: "Household identity"
+        name: "Household name"
+      cards:
+        parties: "Contacts"
+        new_party: "New contact"
+        empty: "No contact."
+        csv_name: "contacts"
+      accounts:
+        selection: "Account or contact shown"
+        pick: "Account or contact"
+        intro: "Choose an account or a contact: balance, amount due, overdue and movements."
+        not_found: "No account or contact “%{q}”."
+      tabs:
+        label: "Household"
+        identity: "Household identity"
     search:
       title: "Search"
       query: "Search: “%{q}”"

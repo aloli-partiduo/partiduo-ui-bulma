@@ -17,7 +17,11 @@ module PartiduoUi
       [crumb("core.menu.reference"), list]
     end
 
-    def tabs(items : Bool) : Array(Screen::Tab)
+    # Onglets « Tiers » et « Articles et services » ; aucun dans un dossier
+    # foyer, qui n'a pas d'articles : la liste y est celle des contacts
+    # (D-FOY-009).
+    def tabs(items : Bool) : Array(Screen::Tab)?
+      return if FolderKind.household?(request)
       [
         Screen::Tab.new(I18n.t("ui.cards.parties"), reverse("cards:index"), !items),
         Screen::Tab.new(I18n.t("ui.cards.items"), reverse("cards:items"), items),
@@ -306,12 +310,12 @@ module PartiduoUi
       actions = [] of Screen::Action
       if can?("cards.card.write")
         new_url = "#{reverse("cards:new")}?#{URI::Params.encode({"for" => items ? "items" : "parties"})}"
-        actions << link_action(items ? "ui.cards.new_item" : "ui.cards.new_party", new_url, "primary", "plus")
+        actions << link_action(items ? "ui.cards.new_item" : kind_key("ui.cards.new_party"), new_url, "primary", "plus")
       end
       import_action(category_id).try { |action| actions << action }
       intro = Partiduo::Api::Cards.count_cards(actor, card_query) > LIST_LIMIT ? I18n.t("ui.cards.truncated", count: LIST_LIMIT) : nil
-      title = I18n.t(items ? "ui.cards.items" : "ui.cards.parties")
-      list_page(title, table, [crumb("core.menu.reference")], items ? "ui.cards.csv_name_items" : "ui.cards.csv_name", actions, tabs(items),
+      title = I18n.t(items ? "ui.cards.items" : kind_key("ui.cards.parties"))
+      list_page(title, table, [crumb("core.menu.reference")], items ? "ui.cards.csv_name_items" : kind_key("ui.cards.csv_name"), actions, tabs(items),
         I18n.t(kind_key("cards.menu.cards_list")), list_filters(items, categories, category_id, kinds, kind), intro, filter: false)
     end
 
@@ -368,7 +372,7 @@ module PartiduoUi
           Table::Cell.new(status_label(card.enabled)),
         ], card.enabled ? "" : "pd-row-closed")
       end
-      Table.new(I18n.t("ui.cards.parties"), columns, rows, path, params, empty_message: I18n.t("ui.cards.empty"))
+      Table.new(I18n.t(kind_key("ui.cards.parties")), columns, rows, path, params, empty_message: I18n.t(kind_key("ui.cards.empty")))
     end
 
     private def items_table(cards, path, params) : Table
@@ -445,7 +449,7 @@ module PartiduoUi
       context["chooser"] = chooser
       context["chooser_title"] = I18n.t("ui.cards.category_step")
       context["chooser_action"] = reverse("cards:new")
-      title = I18n.t(items ? "ui.cards.new_item" : "ui.cards.new_party")
+      title = I18n.t(items ? "ui.cards.new_item" : kind_key("ui.cards.new_party"))
       form_page(title, crumbs(items), form, reverse("cards:new"), I18n.t("ui.forms.create"),
         reverse(items ? "cards:items" : "cards:index"))
     end

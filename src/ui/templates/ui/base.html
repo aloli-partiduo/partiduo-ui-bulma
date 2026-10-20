@@ -1,4 +1,4 @@
-{# SPDX-License-Identifier: AGPL-3.0-or-later. Coquille de l'écran (maquette de référence, ADR-005 D5) : barre supérieure, menu latéral des modules actifs puis des extensions, zone de contenu (titre, fil d'Ariane, actions). #}<!DOCTYPE html>
+{# SPDX-License-Identifier: AGPL-3.0-or-later. Coquille de l'écran (maquette de référence, ADR-005 D5) : barre supérieure, menu latéral des modules actifs puis des extensions, zone de contenu (titre, fil d'Ariane, actions, onglets de l'écran « Foyer » d'un dossier foyer). #}<!DOCTYPE html>
 <html lang="{{ locale }}">
   <head>
 {% include "ui/_head.html" %}
@@ -90,6 +90,7 @@
             </div>
             <div class="buttons pd-actions">{% block actions %}{% endblock actions %}</div>
           </div>
+          {% if shell.tabs %}<nav class="pd-tabs mb-3" aria-label="{% translate 'ui.household.tabs.label' %}">{% for tab in shell.tabs %}<a href="{{ tab.url }}"{% if tab.current %} aria-current="page"{% endif %}>{{ tab.label }}</a>{% endfor %}</nav>{% endif %}
           {% block content %}{% endblock content %}
         </div>
       </main>

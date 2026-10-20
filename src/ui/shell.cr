@@ -70,6 +70,10 @@ module PartiduoUi
     property mode_label : String? = nil
     property settings_url : String? = nil
     property settings_label : String = "ui.micro.settings.title"
+    # Onglets de l'écran « Foyer » d'un dossier foyer, au-dessus du contenu
+    # (`FolderKind.tabs`, D-FOY-009) : identité du foyer et paramètres de
+    # l'extension, réunis sous une seule entrée du menu.
+    property tabs : Array(Screen::Tab)? = nil
 
     # Une période proposée dans la barre supérieure.
     class PeriodOption
@@ -137,10 +141,16 @@ module PartiduoUi
       # interfaces (ADR-011 A2 et A3 : ni achats, ni ventes, ni TVA, ni FEC,
       # ni clôture, ni balances des tiers pour un foyer), dans le vocabulaire
       # du type (« Contacts », « Foyer »).
-      menu = FolderKind.relabel(SimpleMode.without(Partiduo::Api::Modules.menu(actor), SimpleMode.hidden_menus(request)),
-        FolderKind.of(request))
+      # Dossier foyer : les paramètres de l'extension (« Paramètres du
+      # foyer ») rejoignent l'entrée « Foyer », qui reste allumée sur leur
+      # écran (D-FOY-009).
+      household = FolderKind.household_settings(request)
+      menu = FolderKind.relabel(
+        FolderKind.merge_settings(SimpleMode.without(Partiduo::Api::Modules.menu(actor), SimpleMode.hidden_menus(request)),
+          household), FolderKind.of(request))
       counts = Extensions.counts(actor)
-      menu_sections = simple_module ? SimpleMode.sections(menu, request.path, counts, simple_module) : sections(menu, extension_codes(actor), request.path, counts)
+      path = FolderKind.menu_path(request.path, household)
+      menu_sections = simple_module ? SimpleMode.sections(menu, path, counts, simple_module) : sections(menu, extension_codes(actor), path, counts)
       approvals_section(actor, request.path).try { |section| menu_sections << section }
       shell = new(
         sections: menu_sections,
@@ -161,7 +171,12 @@ module PartiduoUi
       shell.mode_target.try { |target| shell.mode_label = SimpleMode.switch_label(request, target) }
       if link = simple_module.try { |code| SimpleMode.settings_link(code, actor) }
         shell.settings_url, shell.settings_label = link
+        # Le lien du menu de l'utilisateur mène lui aussi à « Foyer ».
+        if household && (company = resolve(FolderKind::COMPANY_ROUTE))
+          shell.settings_url, shell.settings_label = company, "ui.household.menu.core_company"
+        end
       end
+      shell.tabs = FolderKind.tabs(request.path, household)
       shell
     end
 

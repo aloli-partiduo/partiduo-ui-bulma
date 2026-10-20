@@ -201,6 +201,112 @@ describe "Dossier foyer (ADR-011 A3)" do
   end
 end
 
+describe "Dossier foyer : écran « Foyer », contacts, comptes (D-FOY-009)" do
+  it "dit « Comptes et contacts » au menu, au titre et à l'écran, en fr, en et nl" do
+    browser = household_books
+    {"fr" => {"Comptes et contacts", "Compte ou contact"},
+     "en" => {"Accounts and contacts", "Account or contact"},
+     "nl" => {"Rekeningen en contacten", "Rekening of contact"}}.each do |locale, (entry, pick)|
+      browser.post("/language", {"locale" => locale, "next" => "/"})
+      I18n.with_locale(locale) do
+        menu = side_menu(browser.get("/").html)
+        menu_label(menu, "accounting:accounts").should eq(entry)
+        page = browser.get(Marten.routes.reverse("accounting:accounts")).html
+        page.should contain("<h1>#{entry}")
+        page.should contain(pick)
+        page.should_not contain(I18n.t("accounting.menu.acc_accounts"))
+        page.should_not contain(I18n.t("ui.accounts.pick"))
+        page.should_not contain("missing translation")
+      end
+    end
+  end
+
+  it "présente les contacts sans onglet d'articles, avec « Nouveau contact »" do
+    browser = household_books
+    page = browser.get(Marten.routes.reverse("cards:index")).html
+    page.should contain("<h1>Contacts")
+    page.should contain("Nouveau contact")
+    page.should_not contain("Articles et services")
+    page.should_not contain(%(class="pd-tabs"))
+    page.should_not contain("Nouveau tiers")
+    form = browser.get("#{Marten.routes.reverse("cards:new")}?for=parties").html
+    form.should contain("Nouveau contact")
+  end
+
+  it "montre et propose le nom et l'adresse du foyer, sans champ d'entreprise, et garde leurs valeurs" do
+    browser = household_books
+    settings = Partiduo::Api::Core.settings(Books.system)
+    Partiduo::Api::Core.update_settings(Books.system, settings.to_input.copy_with(rcs: "RCS conservé")).value!
+    detail = browser.get(Marten.routes.reverse("core:company")).html
+    detail.should contain("Nom du foyer")
+    detail.should contain("Identité du foyer")
+    detail.should contain("Coordonnées")
+    %w[legal_form share_capital rcs siren vat_number creditor_identifier].each do |name|
+      detail.should_not contain(I18n.t("core.settings.fields.#{name}"))
+    end
+    detail.should_not contain("Raison sociale")
+    form = browser.get(Marten.routes.reverse("core:company_edit")).html
+    form.should contain(%(name="company_name"))
+    form.should contain(%(name="street"))
+    %w[legal_form share_capital rcs siren vat_number creditor_identifier].each do |name|
+      form.should_not contain(%(name="#{name}"))
+    end
+    values = {"company_name" => "Foyer Durand", "street" => "rue des Pins", "street_number" => "3", "postcode" => "44000",
+              "city" => "Nantes", "country_code" => "FR", "phone" => "", "email" => "", "default_locale" => "fr",
+              "domain" => settings.domain, "auth_minimum_level" => settings.auth_minimum_level.to_s,
+              "session_duration_minutes" => settings.session_duration_minutes.to_s, "approval_mode" => "single",
+              "approval_reauth_minutes" => "5"}
+    settings.auth_methods.each { |method| values["auth_method:#{method}"] = "1" }
+    response = browser.post(Marten.routes.reverse("core:company_edit"), values)
+    response.status.should eq(302)
+    browser.follow(response).html.should contain("Foyer enregistré.")
+    saved = Partiduo::Api::Core.settings(Books.system)
+    saved.company_name.should eq("Foyer Durand")
+    saved.street.should eq("rue des Pins")
+    saved.rcs.should eq("RCS conservé")
+  end
+
+  it "réunit les paramètres de la variante à l'entrée « Foyer » : une entrée, deux onglets" do
+    browser = household_books
+    Partiduo::Api::Modules.activate(Books.system, "UITEST").success?.should be_true
+    menu = [PartiduoUi::SimpleMode::Entry.new("DASHBOARD", "core.menu.dashboard")]
+    PartiduoUi::Extensions.simple_mode("UITEST", read: "uitest.page.view", menu: menu, settings_route: "uitest:index",
+      settings_permission: "uitest.page.view", settings_label: "uitest.menu.uitest_home")
+    begin
+      # Interface simplifiée : le lien du menu de l'utilisateur mène à « Foyer ».
+      simple = browser.get("/").html
+      simple.should contain(%(<li><a href="#{Marten.routes.reverse("core:company")}">))
+      simple.should_not contain(%(<li><a href="/ext/UITEST/">))
+
+      browser.post("/account/preferences", {"interface" => "full"}).status.should eq(302)
+      full = side_menu(browser.get("/").html)
+      menu_label(full, "core:company").should eq("Foyer")
+      full.should_not contain(%(href="/ext/UITEST/"))
+
+      detail = browser.get(Marten.routes.reverse("core:company")).html
+      tabs = detail.match(/<nav class="pd-tabs mb-3" aria-label="Foyer">.*?<\/nav>/m).try(&.[0]) || fail "onglets absents"
+      tabs.should contain(%(<a href="#{Marten.routes.reverse("core:company")}" aria-current="page">Identité du foyer</a>))
+      tabs.should contain(%(<a href="/ext/UITEST/">Page de test</a>))
+      browser.get(Marten.routes.reverse("core:company_edit")).html.should contain(%(aria-current="page">Identité du foyer</a>))
+
+      # Sur l'écran des paramètres de l'extension, « Foyer » reste l'entrée active.
+      settings = PartiduoUi::FolderKind.household_settings(Books.system).should_not be_nil
+      PartiduoUi::FolderKind.menu_path("/ext/UITEST/", settings).should eq(Marten.routes.reverse("core:company"))
+      PartiduoUi::FolderKind.menu_path("/", settings).should eq("/")
+      on_settings = PartiduoUi::FolderKind.tabs("/ext/UITEST/", settings).should_not be_nil
+      on_settings.map(&.current).should eq([false, true])
+      PartiduoUi::FolderKind.tabs("/", settings).should be_nil
+    ensure
+      PartiduoUi::SimpleMode.unregister("UITEST")
+    end
+  end
+
+  it "garde « Foyer » seul, sans onglet, sans variante qui déclare ses paramètres" do
+    browser = household_books
+    browser.get(Marten.routes.reverse("core:company")).html.should_not contain(%(class="pd-tabs))
+  end
+end
+
 describe "Dossier d'entreprise inchangé par le type foyer" do
   it "garde les tuiles, le bouton, les menus et le vocabulaire de l'entreprise" do
     browser = Books.admin
@@ -221,5 +327,12 @@ describe "Dossier d'entreprise inchangé par le type foyer" do
     detail.should contain(%(<a href="#{Marten.routes.reverse("core:company")}">Société</a>))
     detail.should_not contain("Foyer")
     browser.get(Marten.routes.reverse("core:company_edit")).html.should contain("Modifier la société")
+    detail.should contain("Raison sociale")
+    detail.should contain(I18n.t("core.settings.fields.siren"))
+    detail.should_not contain(%(class="pd-tabs))
+    menu_label(menu, "accounting:accounts").should eq("Comptes et tiers")
+    cards = browser.get(Marten.routes.reverse("cards:index")).html
+    cards.should contain("Articles et services")
+    cards.should contain("Nouveau tiers")
   end
 end

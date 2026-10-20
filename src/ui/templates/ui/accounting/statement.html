@@ -4,9 +4,9 @@
 {% block heading %}{% if statement %}{{ statement.title }}{% else %}{{ title }}{% endif %}{% endblock heading %}
 {% block actions %}{% for action in actions %}{% include "ui/_action.html" %}{% endfor %}{% endblock actions %}
 {% block content %}
-<form class="pd-panel" method="get" action="{% url 'accounting:accounts' %}" role="search" aria-label="{% translate 'ui.accounts.selection' %}">
+<form class="pd-panel" method="get" action="{% url 'accounting:accounts' %}" role="search" aria-label="{% translate selection_key %}">
   <div class="pd-body pd-acc-head">
-    <div class="field pd-acc-pick"><label class="label" for="pd-acc-q">{% translate "ui.accounts.pick" %}</label>
+    <div class="field pd-acc-pick"><label class="label" for="pd-acc-q">{% translate pick_key %}</label>
       <input class="input" id="pd-acc-q" name="q" value="{{ q }}" list="pd-dl-accounts" autocomplete="off" spellcheck="false" placeholder="{% translate 'ui.accounts.pick_placeholder' %}" hx-get="{% url 'accounting:complete' %}?list=entry" hx-trigger="input changed delay:150ms" hx-target="#pd-dl-accounts" hx-sync="this:replace"></div>
     <div class="field"><label class="label" for="pd-acc-from">{% translate "ui.accounts.from" %}</label><input class="input pd-mono pd-date-input" id="pd-acc-from" name="from" value="{{ from }}" inputmode="numeric"></div>
     <div class="field"><label class="label" for="pd-acc-to">{% translate "ui.accounts.to" %}</label><input class="input pd-mono pd-date-input" id="pd-acc-to" name="to" value="{{ to }}" inputmode="numeric"></div>
@@ -68,6 +68,6 @@
   </aside>
 </div>
 {% elsif not not_found %}
-<p class="pd-muted">{% translate "ui.accounts.intro" %}</p>
+<p class="pd-muted">{% translate intro_key %}</p>
 {% endif %}
 {% endblock content %}

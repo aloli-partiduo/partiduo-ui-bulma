@@ -129,10 +129,26 @@ nl:
       menu:
         cards_list: "Contacten"
         core_company: "Huishouden"
+        acc_accounts: "Rekeningen en contacten"
       company:
         edit: "Huishouden wijzigen"
         intro: "Identiteit van het huishouden, overgenomen in de vermeldingen op documenten. Het belastingstelsel wijzigt niet meer na de aanmaak."
         updated: "Huishouden opgeslagen."
+        identity: "Identiteit van het huishouden"
+        name: "Naam van het huishouden"
+      cards:
+        parties: "Contacten"
+        new_party: "Nieuw contact"
+        empty: "Geen contact."
+        csv_name: "contacten"
+      accounts:
+        selection: "Getoonde rekening of contact"
+        pick: "Rekening of contact"
+        intro: "Kies een rekening of een contact: saldo, openstaand bedrag, vervallen en bewegingen."
+        not_found: "Geen rekening of contact „%{q}”."
+      tabs:
+        label: "Huishouden"
+        identity: "Identiteit van het huishouden"
     search:
       title: "Zoeken"
       query: "Zoekopdracht: „%{q}”"

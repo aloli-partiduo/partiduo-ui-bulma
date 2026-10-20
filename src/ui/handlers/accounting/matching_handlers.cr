@@ -126,11 +126,12 @@ module PartiduoUi
       context["check"] = nil
       context["refused"] = refused
       context["statement_url"] = nil
+      context["statement_key"] = kind_key("accounting.menu.acc_accounts")
       unless text.empty?
         open = statement(text, true)
         full = statement(text, false)
         if open.nil? || full.nil?
-          context["not_found"] = I18n.t("ui.accounts.not_found", q: text)
+          context["not_found"] = I18n.t(kind_key("ui.accounts.not_found"), q: text)
           return page("ui/accounting/matching.html", status: 404)
         end
         context["matching"] = view(open, full, checked)

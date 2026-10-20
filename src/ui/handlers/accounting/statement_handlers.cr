@@ -67,7 +67,9 @@ module PartiduoUi
   class StatementHandler < AccountingScreen
     def get
       text = selection
-      context["title"] = I18n.t("accounting.menu.acc_accounts")
+      # Vocabulaire du type de dossier : « Comptes et contacts » d'un foyer.
+      context["title"] = I18n.t(kind_key("accounting.menu.acc_accounts"))
+      %w[selection pick intro].each { |name| context["#{name}_key"] = kind_key("ui.accounts.#{name}") }
       context["crumbs"] = [crumb("core.menu.consult"), crumb("accounting.menu.acc_accounts", reverse("accounting:accounts"))]
       context["q"] = text
       from = query_day("from") || (query("from").empty? ? fiscal_year_start : nil)
@@ -86,7 +88,7 @@ module PartiduoUi
       statement = begin
         Acc.account_statement(current.actor, criteria)
       rescue Partiduo::Api::NotFound
-        context["not_found"] = I18n.t("ui.accounts.not_found", q: text)
+        context["not_found"] = I18n.t(kind_key("ui.accounts.not_found"), q: text)
         return page("ui/accounting/statement.html", status: 404)
       end
       return export_response(csv_table(statement), I18n.t("ui.accounts.csv_name")) if export?
@@ -199,7 +201,7 @@ module PartiduoUi
           Table::Cell.new(fmt.csv_amount(line.balance)), Table::Cell.new(line.matching_code || ""),
         ])
       end
-      Table.new(I18n.t("accounting.menu.acc_accounts"), columns, rows, reverse("accounting:accounts"))
+      Table.new(I18n.t(kind_key("accounting.menu.acc_accounts")), columns, rows, reverse("accounting:accounts"))
     end
   end
 end
