@@ -141,6 +141,7 @@ nl:
         new_party: "Nieuw contact"
         empty: "Geen contact."
         csv_name: "contacten"
+        search_placeholder: "Naam, code, beschrijving…"
       accounts:
         selection: "Getoonde rekening of contact"
         pick: "Rekening of contact"

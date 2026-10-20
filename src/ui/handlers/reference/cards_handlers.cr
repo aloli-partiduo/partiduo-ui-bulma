@@ -337,7 +337,7 @@ module PartiduoUi
     end
 
     private def list_filters(items, categories, category_id, kinds, kind) : Form
-      filters = [Form::Field.new("q", I18n.t("ui.table.search"), value: query("q"), placeholder: I18n.t("ui.cards.search_placeholder"))]
+      filters = [Form::Field.new("q", I18n.t("ui.table.search"), value: query("q"), placeholder: I18n.t(kind_key("ui.cards.search_placeholder")))]
       filters << Form::Field.new("category", I18n.t("ui.cards.category"), "select", category_id.try(&.to_s) || "",
         options: [option("", I18n.t("ui.cards.all_categories"))] + categories.map { |item| option(item.id.to_s, item.name) })
       unless items
@@ -361,8 +361,11 @@ module PartiduoUi
         Table::Column.new("email", I18n.t("ui.cards.email"), secondary: true),
         Table::Column.new("status", I18n.t("ui.fiscal_years.status")),
       ]
+      # Un foyer ne tient ni TVA ni SIREN de ses contacts (D-FOY-009).
+      household = FolderKind.household?(request)
+      columns.reject!(&.key.==("vat_number")) if household
       rows = cards.map do |card|
-        Table::Row.new([
+        cells = [
           Table::Cell.new(card.code, reverse("cards:show", id: card.id)),
           Table::Cell.new(card.name),
           Table::Cell.new(card.category_name),
@@ -370,7 +373,9 @@ module PartiduoUi
           Table::Cell.new(card.address.try(&.city) || ""),
           Table::Cell.new(card.email),
           Table::Cell.new(status_label(card.enabled)),
-        ], card.enabled ? "" : "pd-row-closed")
+        ]
+        cells.delete_at(3) if household
+        Table::Row.new(cells, card.enabled ? "" : "pd-row-closed")
       end
       Table.new(I18n.t(kind_key("ui.cards.parties")), columns, rows, path, params, empty_message: I18n.t(kind_key("ui.cards.empty")))
     end

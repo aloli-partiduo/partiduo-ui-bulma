@@ -184,7 +184,7 @@ body { background: var(--pd-ground); color: var(--pd-ink); font-family: var(--bu
    discret d'un exercice figé. */
 .pd-exercise .pd-icon { color: var(--pd-muted); margin-inline-end: .25rem; }
 /* Stock final négatif, action de suivi en retard (lot 6). */
-.pd-table tr.pd-row-warning td { color: var(--bulma-danger-40, #a3001b); }
+.pd-table tr.pd-row-warning td { color: var(--pd-gap); }
 .pd-link { color: var(--bulma-link); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 2px; }
 .pd-table-foot { display: flex; gap: .75rem 1rem; align-items: center; flex-wrap: wrap; justify-content: space-between; padding: .6rem 1rem;
   border-block-start: 1px solid var(--pd-rule); font-size: .85rem; }

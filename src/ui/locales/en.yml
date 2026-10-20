@@ -141,6 +141,7 @@ en:
         new_party: "New contact"
         empty: "No contact."
         csv_name: "contacts"
+        search_placeholder: "Name, code, description…"
       accounts:
         selection: "Account or contact shown"
         pick: "Account or contact"

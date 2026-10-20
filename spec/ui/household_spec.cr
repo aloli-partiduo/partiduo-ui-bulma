@@ -229,6 +229,8 @@ describe "Dossier foyer : écran « Foyer », contacts, comptes (D-FOY-009)" do
     page.should_not contain("Articles et services")
     page.should_not contain(%(class="pd-tabs"))
     page.should_not contain("Nouveau tiers")
+    page.should_not contain("Numéro de TVA")
+    page.should contain(%(placeholder="Nom, code, description…"))
     form = browser.get("#{Marten.routes.reverse("cards:new")}?for=parties").html
     form.should contain("Nouveau contact")
   end

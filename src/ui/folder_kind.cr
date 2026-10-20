@@ -47,6 +47,7 @@ module PartiduoUi
         "ui.cards.new_party"                => "ui.household.cards.new_party",
         "ui.cards.empty"                    => "ui.household.cards.empty",
         "ui.cards.csv_name"                 => "ui.household.cards.csv_name",
+        "ui.cards.search_placeholder"       => "ui.household.cards.search_placeholder",
         "ui.accounts.selection"             => "ui.household.accounts.selection",
         "ui.accounts.pick"                  => "ui.household.accounts.pick",
         "ui.accounts.intro"                 => "ui.household.accounts.intro",
