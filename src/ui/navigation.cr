@@ -68,6 +68,17 @@ module PartiduoUi
 
   # Page d'erreur (403, 404) rendue hors d'un handler (middleware).
   module ErrorPage
+    # Formulaire refusé par la protection CSRF de Marten (jeton absent ou
+    # périmé, origine refusée) : page traduite « formulaire expiré » au lieu
+    # du texte brut en anglais de Marten. `public` : page d'une route
+    # publique d'extension, sans lien vers le dossier (A-FRM-1).
+    def self.expired(request : Marten::HTTP::Request, public : Bool = false) : Marten::HTTP::Response
+      values = {"status" => 403, "expired" => true, "public" => public, "locale" => I18n.locale}
+      context = Marten::Template::Context.from(values, request)
+      content = Marten.templates.get_template("ui/errors/http.html").render(context)
+      Marten::HTTP::Response.new(content: content, content_type: "text/html; charset=utf-8", status: 403)
+    end
+
     def self.render(request : Marten::HTTP::Request, status : Int32) : Marten::HTTP::Response
       context = Marten::Template::Context.from({"status" => status, "locale" => I18n.locale}, request)
       Licences.footer.each { |key, value| context[key] = value }

@@ -58,6 +58,13 @@ module PartiduoUi
       PublicErrorPage.render(request, 404)
     end
 
+    # Refus CSRF : page « formulaire expiré » traduite, sans lien vers le
+    # dossier (A-FRM-1).
+    private def reject(message)
+      Marten::Log.info { "refus CSRF : #{message}" }
+      ErrorPage.expired(request, public: true)
+    end
+
     private def secured(response : Marten::HTTP::Response) : Marten::HTTP::Response
       Extensions::PUBLIC_HEADERS.each do |name, value|
         response.headers[name] = value unless response.headers.has_key?(name)

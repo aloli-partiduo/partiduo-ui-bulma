@@ -72,6 +72,12 @@ module PartiduoUi
       render(template, values, status: status)
     end
 
+    # Refus de la protection CSRF de Marten : page traduite, motif au journal.
+    private def reject(message)
+      Marten::Log.info { "refus CSRF : #{message}" }
+      ErrorPage.expired(request)
+    end
+
     private def activate_user_locale
       Locale.activate_for(request, current)
       nil

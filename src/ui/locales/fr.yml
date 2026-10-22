@@ -368,6 +368,13 @@ fr:
       unauthorized_title: "Connexion nécessaire"
       unauthorized: "Connectez-vous pour accéder à cette page."
       back: "Revenir au tableau de bord"
+      bad_request_title: "Demande non valide"
+      bad_request: "Cette demande n'a pas pu être traitée. Revenez à la page précédente, puis recommencez."
+      expired_title: "Formulaire expiré"
+      expired: "Ce formulaire n'est plus valable : la session a expiré, ou la page est ouverte depuis longtemps. Rechargez la page, puis recommencez."
+      server_error_title: "Erreur du serveur"
+      server_error: "Une erreur inattendue s'est produite ; elle est consignée dans le journal du serveur. Réessayez dans un instant."
+      home: "Revenir à l'accueil"
     public:
       not_found_title: "Lien non valide"
       not_found: "Cette adresse n'existe pas ou n'est plus valable."

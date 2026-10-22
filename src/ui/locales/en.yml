@@ -368,6 +368,13 @@ en:
       unauthorized_title: "Sign-in required"
       unauthorized: "Sign in to access this page."
       back: "Back to the dashboard"
+      bad_request_title: "Bad request"
+      bad_request: "This request could not be processed. Go back to the previous page, then try again."
+      expired_title: "Form expired"
+      expired: "This form is no longer valid: the session has expired, or the page has been open for a long time. Reload the page, then try again."
+      server_error_title: "Server error"
+      server_error: "An unexpected error occurred; it has been recorded in the server log. Try again in a moment."
+      home: "Back to the home page"
     public:
       not_found_title: "Invalid link"
       not_found: "This address does not exist or is no longer valid."

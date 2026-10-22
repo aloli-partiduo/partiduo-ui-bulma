@@ -368,6 +368,13 @@ nl:
       unauthorized_title: "Aanmelden vereist"
       unauthorized: "Meld u aan om deze pagina te openen."
       back: "Terug naar het dashboard"
+      bad_request_title: "Ongeldige aanvraag"
+      bad_request: "Deze aanvraag kon niet worden verwerkt. Ga terug naar de vorige pagina en probeer het opnieuw."
+      expired_title: "Formulier verlopen"
+      expired: "Dit formulier is niet meer geldig: de sessie is verlopen, of de pagina is al lang geopend. Laad de pagina opnieuw en probeer het nogmaals."
+      server_error_title: "Serverfout"
+      server_error: "Er is een onverwachte fout opgetreden; deze is vastgelegd in het serverlogboek. Probeer het zo opnieuw."
+      home: "Terug naar de startpagina"
     public:
       not_found_title: "Ongeldige link"
       not_found: "Dit adres bestaat niet of is niet meer geldig."

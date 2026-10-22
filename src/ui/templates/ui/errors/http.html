@@ -1,0 +1,23 @@
+{# SPDX-License-Identifier: AGPL-3.0-or-later. Page d'erreur rendue par Marten hors des handlers de l'interface (400, 403, 404, 500 : adresse sans route, en-tête Host refusé, exception) et refus CSRF (formulaire expiré, variable expired ; public : route publique d'extension, sans lien vers le dossier) : traduite, sans menu ni accès à la base, pour qu'une erreur du serveur s'affiche encore. Gabarits 400.html, 403.html, 404.html, 500.html. #}<!DOCTYPE html>
+<html lang="{{ locale }}">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="{% asset 'ui/css/fonts.css' %}">
+    <link rel="stylesheet" href="{% asset 'ui/css/bulma.min.css' %}">
+    <link rel="stylesheet" href="{% asset 'ui/css/theme.css' %}">
+    <link rel="stylesheet" href="{% asset 'ui/css/access.css' %}">
+    <link rel="stylesheet" href="{% asset 'ui/css/app.css' %}">
+    <title>{% if expired %}{% translate "ui.errors.expired_title" %}{% elsif status == 400 %}{% translate "ui.errors.bad_request_title" %}{% elsif status == 403 %}{% translate "ui.errors.forbidden_title" %}{% elsif status == 404 %}{% translate "ui.errors.not_found_title" %}{% else %}{% translate "ui.errors.server_error_title" %}{% endif %} · Partiduo</title>
+  </head>
+  <body class="pd-auth-body">
+    <main class="pd-auth" id="pd-main">
+      <div class="pd-auth-card">
+        <h1 class="pd-auth-title">{% if expired %}{% translate "ui.errors.expired_title" %}{% elsif status == 400 %}{% translate "ui.errors.bad_request_title" %}{% elsif status == 403 %}{% translate "ui.errors.forbidden_title" %}{% elsif status == 404 %}{% translate "ui.errors.not_found_title" %}{% else %}{% translate "ui.errors.server_error_title" %}{% endif %}</h1>
+        <p>{% if expired %}{% translate "ui.errors.expired" %}{% elsif status == 400 %}{% translate "ui.errors.bad_request" %}{% elsif status == 403 %}{% translate "ui.errors.forbidden" %}{% elsif status == 404 %}{% translate "ui.errors.not_found" %}{% else %}{% translate "ui.errors.server_error" %}{% endif %}</p>
+        {% if not public %}<p class="mt-4"><a class="button is-primary" href="/">{% translate "ui.errors.home" %}</a></p>{% endif %}
+      </div>
+    </main>
+  </body>
+</html>
