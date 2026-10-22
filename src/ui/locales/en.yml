@@ -132,6 +132,7 @@ en:
         cards_list: "Contacts"
         core_company: "Household"
         acc_accounts: "Accounts and contacts"
+        cards_categories: "Contact categories"
       company:
         edit: "Edit household"
         intro: "Household identity, shown in the mentions of documents. The tax regime cannot change after creation."
@@ -144,6 +145,22 @@ en:
         empty: "No contact."
         csv_name: "contacts"
         search_placeholder: "Name, code, description…"
+        all_kinds: "All types"
+        kind: "Contact type"
+        kinds:
+          customer: "Payer"
+          supplier: "Provider"
+          bank: "Bank"
+          employee: "Household employee"
+          contact: "Contact"
+          other: "Other"
+        categories:
+          customer: "Payers"
+          supplier: "Providers and shops"
+          bank: "Banks"
+          employee: "Household employees"
+          contact: "Contacts"
+          tax_authority: "Tax and public authorities"
       accounts:
         selection: "Account or contact shown"
         pick: "Account or contact"
@@ -152,6 +169,8 @@ en:
       tabs:
         label: "Household"
         identity: "Household identity"
+      categories:
+        intro: "Categories sort contacts (payers, providers, banks…) and define their own attributes."
     search:
       title: "Search"
       query: "Search: “%{q}”"

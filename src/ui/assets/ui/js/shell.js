@@ -121,11 +121,16 @@
   }
 
   function start() {
-    document.documentElement.classList.add("pd-js");
+    // Déjà posée par early.js dans l'en-tête (D-UI-079) ; reposée ici si
+    // ce script-là manquait. Le repli du menu entier, repris de même par
+    // early.js sur <html>, passe à la coquille, qui le tient désormais.
+    var html = document.documentElement;
+    html.classList.add("pd-js");
     var root = app();
     try {
       if (root && window.localStorage.getItem(KEY) === "1") root.classList.add("is-menu-collapsed");
     } catch (e) { /* stockage indisponible */ }
+    html.classList.remove("pd-menu-collapsed");
     applySections(document);
     sync();
     window.matchMedia("(max-width: 767.98px)").addEventListener("change", sync);

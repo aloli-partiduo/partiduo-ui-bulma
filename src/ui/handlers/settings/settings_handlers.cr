@@ -448,13 +448,13 @@ module PartiduoUi
     end
 
     def category_form(input : Cards::CategoryInput, creating : Bool) : Form
-      kinds = Cards::KINDS.map { |kind| option(kind, I18n.t("cards.kinds.#{kind}")) }
+      kinds = FolderKind.card_kinds(FolderKind.of(request), Cards::KINDS).map { |kind| option(kind, card_kind_label(kind)) }
       types = %w[text number date boolean card].map { |type| option(type, I18n.t("cards.value_types.#{type}")) }
       main = [] of Form::Field
       main << Form::Field.new("code", I18n.t("ui.categories.code"), value: input.code, required: true, mono: true, maxlength: 32,
         help: I18n.t("ui.categories.code_help")) if creating
       main << Form::Field.new("name", I18n.t("ui.categories.name"), value: input.name, required: true, maxlength: 255)
-      main << Form::Field.new("kind", I18n.t("ui.categories.kind"), "select", input.kind, options: kinds, required: true) if creating
+      main << Form::Field.new("kind", I18n.t(kind_key("ui.categories.kind")), "select", input.kind, options: kinds, required: true) if creating
       main << Form::Field.new("description", I18n.t("ui.categories.description"), "textarea", input.description || "", wide: true)
       groups = [Form::Group.new(nil, main)]
       rows = input.attributes + Array.new(BLANK_ROWS) { Cards::AttributeInput.new(key: "", label: "") }
@@ -501,24 +501,26 @@ module PartiduoUi
       columns = [
         Table::Column.new("name", I18n.t("ui.categories.name")),
         Table::Column.new("code", I18n.t("ui.categories.code"), "mono"),
-        Table::Column.new("kind", I18n.t("ui.categories.kind")),
+        Table::Column.new("kind", I18n.t(kind_key("ui.categories.kind"))),
         Table::Column.new("attributes", I18n.t("ui.categories.attributes"), "amount", secondary: true),
         Table::Column.new("cards", I18n.t("ui.categories.cards"), "amount"),
       ]
-      rows = Cards.categories(current.actor).map do |category|
+      kinds = FolderKind.card_kinds(FolderKind.of(request), Cards::KINDS)
+      rows = Cards.categories(current.actor).select { |category| kinds.includes?(category.kind) }.map do |category|
         Table::Row.new([
-          Table::Cell.new(category.name, reverse("cards:category", id: category.id)),
+          Table::Cell.new(category_label(category.code, category.name), reverse("cards:category", id: category.id)),
           Table::Cell.new(category.code),
-          Table::Cell.new(I18n.t(category.kind_key)),
+          Table::Cell.new(card_kind_label(category.kind)),
           Table::Cell.new(category.attributes.size.to_s, sort: BigDecimal.new(category.attributes.size)),
           Table::Cell.new(category.card_count.to_s, sort: BigDecimal.new(category.card_count)),
         ])
       end
-      table = Table.new(I18n.t("cards.menu.cards_categories"), columns, rows, reverse("cards:categories"))
+      title = I18n.t(kind_key("cards.menu.cards_categories"))
+      table = Table.new(title, columns, rows, reverse("cards:categories"))
       actions = [] of Screen::Action
       actions << link_action("ui.categories.new", reverse("cards:category_new"), "primary", "plus") if can?(PERMISSION)
-      list_page(I18n.t("cards.menu.cards_categories"), table, [crumb("core.menu.settings")], "ui.categories.csv_name", actions,
-        intro: I18n.t("ui.categories.intro"))
+      list_page(title, table, [crumb("core.menu.settings")], "ui.categories.csv_name", actions,
+        intro: I18n.t(kind_key("ui.categories.intro")))
     end
   end
 
@@ -550,7 +552,7 @@ module PartiduoUi
       category = Cards.category(current.actor, id_param)
       items = [
         Screen::Item.new(I18n.t("ui.categories.code"), category.code, mono: true),
-        Screen::Item.new(I18n.t("ui.categories.kind"), I18n.t(category.kind_key)),
+        Screen::Item.new(I18n.t(kind_key("ui.categories.kind")), card_kind_label(category.kind)),
         Screen::Item.new(I18n.t("ui.categories.description"), category.description),
         Screen::Item.new(I18n.t("ui.categories.cards"), category.card_count.to_s,
           reverse("cards:index") + "?" + URI::Params.encode({"category" => category.id.to_s})),
@@ -573,8 +575,9 @@ module PartiduoUi
         actions << link_action("ui.forms.edit", reverse("cards:category_edit", id: category.id), "primary")
         actions << post_action("ui.forms.delete", reverse("cards:category_delete", id: category.id), "ui.categories.delete_confirm", "danger")
       end
-      detail_page(category.name, crumbs, [Screen::Section.new(category.name, items),
-                                          Screen::Section.new(I18n.t("ui.categories.attributes"), table: table)], actions)
+      name = category_label(category.code, category.name)
+      detail_page(name, crumbs, [Screen::Section.new(name, items),
+                                 Screen::Section.new(I18n.t("ui.categories.attributes"), table: table)], actions)
     end
   end
 

@@ -187,6 +187,16 @@ module PartiduoUi
       @@public_mounts[code.upcase]?
     end
 
+    # Remplace, pour le journal des requêtes du serveur, le chemin de la
+    # requête par `path` : le journal (`Marten::Server::Handlers::Logger`)
+    # l'écrit après la réponse. Le point d'entrée public y passe tous ses
+    # chemins (`/p/<code>/…`, D-AMD-037) ; une extension s'en sert pour un
+    # autre chemin qui porte un secret (`/f/…` de `partiduo-form`). À
+    # appeler une fois la réponse produite.
+    def self.mask_logged_path(request : Marten::HTTP::Request, path : String) : Nil
+      request.partiduo_mask_logged_path(path)
+    end
+
     # Specs : retire un montage public déclaré par un exemple.
     def self.unmount_public(code : String) : Nil
       @@public_mounts.delete(code)

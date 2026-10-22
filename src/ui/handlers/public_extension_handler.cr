@@ -11,12 +11,28 @@ module PartiduoUi
   # . taille annoncée au-delà de la limite du montage : 413 ;
   #
   # puis le handler de l'extension (protection CSRF de Marten comprise).
-  # Toute réponse reçoit les en-têtes stricts communs
-  # (`Extensions::PUBLIC_HEADERS`) que le handler n'a pas posés lui-même.
-  # Aucune session n'est exigée ni lue.
+  # Toute réponse, y compris le refus de la protection CSRF rendu avant
+  # `dispatch`, reçoit les en-têtes stricts communs
+  # (`Extensions::PUBLIC_HEADERS`) que le handler n'a pas posés lui-même ;
+  # le chemin servi est masqué dans le journal des requêtes du serveur
+  # (`/p/<code>/…`, D-AMD-037), quelle que soit la réponse. Aucune session
+  # n'est exigée ni lue.
   class PublicExtensionHandler < Handler
+    def process_dispatch : Marten::HTTP::Response
+      secured(super)
+    ensure
+      Extensions.mask_logged_path(request, masked_path)
+    end
+
     def dispatch : Marten::HTTP::Response
-      secured(answer)
+      answer
+    end
+
+    # Chemin écrit au journal : préfixe et code d'une extension montée,
+    # jamais la suite (jeton, identifiant), ni un code inconnu.
+    private def masked_path : String
+      mount = Extensions.public_mount?(params["code"]?.to_s)
+      mount ? "#{mount.path}/…" : "#{Extensions::PUBLIC_PREFIX}…"
     end
 
     private def answer : Marten::HTTP::Response

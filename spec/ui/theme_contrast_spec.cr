@@ -139,6 +139,11 @@ module ThemeContrast
     list << {"bouton is-link", hsl(tokens, "link", "--bulma-link-invert-l"), hsl(tokens, "link", "--bulma-link-l"), 4.5}
     list << {"principale / --pd-surface (composant)", primary, c.call("--pd-surface"), 3.0}
     list << {"--pd-field-border / --pd-surface", c.call("--pd-field-border"), c.call("--pd-surface"), 3.0}
+    # Champs de saisie (jetons --pd-field-*, D-THM-002) : texte, bordure, et
+    # fond distinct de celui de la barre et des panneaux qui les portent.
+    list << {"--pd-field-ink / --pd-field-bg", c.call("--pd-field-ink"), c.call("--pd-field-bg"), 4.5}
+    list << {"--pd-muted / --pd-field-bg", c.call("--pd-muted"), c.call("--pd-field-bg"), 4.5}
+    list << {"--pd-field-border / --pd-field-bg", c.call("--pd-field-border"), c.call("--pd-field-bg"), 3.0}
     {"--pd-surface", "--pd-ground"}.each do |ground|
       list << {"--pd-focus / #{ground}", c.call("--pd-focus"), c.call(ground), 3.0}
     end
@@ -188,6 +193,20 @@ describe "Contrastes du thème (WCAG AA)" do
     theme = ThemeContrast.theme
     theme.should contain(%(:root:not([data-theme="light"]) .notification.is-light { --bulma-notification-background-l: var(--bulma-light-l); }))
     theme.should contain(%(:root[data-theme="dark"] .notification.is-light { --bulma-notification-background-l: var(--bulma-light-l); }))
+  end
+
+  it "tire le fond et le texte de tous les champs de Bulma des jetons --pd-field-*, dans les deux thèmes (D-THM-002)" do
+    theme = ThemeContrast.theme
+    theme.should contain(".input, .textarea, .select select { background-color: var(--pd-field-bg); color: var(--pd-field-ink); }")
+    {ThemeContrast.light, ThemeContrast.dark}.each do |tokens|
+      tokens["--pd-field-bg"]?.should_not be_nil
+      tokens["--pd-field-ink"]?.should_not be_nil
+    end
+    # En sombre, aucun champ ne garde un fond clair.
+    ThemeContrast.ratio(ThemeContrast.color(ThemeContrast.dark, "--pd-field-bg"), ThemeContrast::Rgb.new(0.0, 0.0, 0.0))
+      .should be < 1.5
+    app = File.read(File.join(ThemeContrast::CSS_DIR, "app.css"))
+    app.should_not match(/(input|select|textarea)[^{}]*\{[^}]*background(-color)?:\s*(#fff|white|var\(--pd-surface\))/)
   end
 
   it "atteint 4,5:1 pour le texte et 3:1 pour les composants, en clair" do

@@ -98,6 +98,12 @@ describe "Coquille de l'écran (maquette, ADR-005 D5)" do
     body.should contain(%(href="/assets/ui/css/theme.css"))
     body.should contain(%(src="/assets/ui/js/htmx.min.js"))
     body.should contain(%(src="/assets/ui/js/shell.js"))
+    # pd-js posée avant le premier affichage, par un fichier du site et non
+    # par un script en ligne (D-UI-079) : premier script, sans defer.
+    head = body.match(/<head>.*<\/head>/m).try(&.[0]) || fail "en-tête absent"
+    head.should contain(%(<script src="/assets/ui/js/early.js"></script>))
+    head.index!("early.js").should be < head.index!("ui/css/bulma.min.css")
+    head.scan(/<script(?![^>]*\bsrc=)/).should be_empty
     body.should contain(%(<meta name="csrf-token"))
     body.should contain("/assets/ui/icons/sprite.svg#menu")
   end

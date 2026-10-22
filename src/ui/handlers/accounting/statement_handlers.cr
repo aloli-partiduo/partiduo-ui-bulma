@@ -155,7 +155,7 @@ module PartiduoUi
         end
         items << Screen::Item.new(I18n.t("ui.cards.code"), statement.card_code || "", reverse("cards:show", id: id), mono: true)
         if card
-          items << Screen::Item.new(I18n.t("ui.cards.category"), card.category_name)
+          items << Screen::Item.new(I18n.t("ui.cards.category"), category_label(card.category_code, card.category_name))
           items << Screen::Item.new(I18n.t("ui.cards.siren"), card.siren, mono: true)
           items << Screen::Item.new(I18n.t("ui.cards.vat_number"), card.vat_number, mono: true)
           items << Screen::Item.new(I18n.t("ui.cards.email"), card.email)

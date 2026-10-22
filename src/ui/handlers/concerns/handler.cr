@@ -221,6 +221,18 @@ module PartiduoUi
     def kind_key(label_key : String) : String
       FolderKind.label_key(request, label_key)
     end
+
+    # Nature d'une fiche (`cards.kinds.*`) dans le vocabulaire du type de
+    # dossier de la requête (« Payeur » dans un foyer).
+    def card_kind_label(kind : String) : String
+      I18n.t(FolderKind.card_kind_key(FolderKind.of(request), kind))
+    end
+
+    # Nom d'une catégorie de fiches dans le vocabulaire du type de dossier
+    # (`FolderKind.category_name`).
+    def category_label(code : String, name : String) : String
+      FolderKind.category_name(FolderKind.of(request), code, name)
+    end
   end
 end
 

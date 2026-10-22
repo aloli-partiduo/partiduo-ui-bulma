@@ -34,7 +34,7 @@ module PartiduoUi
     end
 
     def kind_label(kind : String) : String
-      I18n.t("cards.kinds.#{kind}")
+      card_kind_label(kind)
     end
 
     def status_label(enabled : Bool) : String
@@ -68,7 +68,7 @@ module PartiduoUi
 
     def card_form(category : Partiduo::Api::Cards::CategoryView, input : Partiduo::Api::Cards::CardInput,
                   categories : Array(Partiduo::Api::Cards::CategoryView)) : Form
-      category_options = categories.map { |item| option(item.id.to_s, "#{item.name} (#{kind_label(item.kind)})") }
+      category_options = categories.map { |item| option(item.id.to_s, "#{category_label(item.code, item.name)} (#{kind_label(item.kind)})") }
       groups = [Form::Group.new(nil, [
         Form::Field.new("name", I18n.t("ui.cards.name"), value: input.name, required: true, maxlength: 255, wide: true),
         Form::Field.new("code", I18n.t("ui.cards.code"), value: input.code || "", mono: true, maxlength: 40,
@@ -339,10 +339,11 @@ module PartiduoUi
     private def list_filters(items, categories, category_id, kinds, kind) : Form
       filters = [Form::Field.new("q", I18n.t("ui.table.search"), value: query("q"), placeholder: I18n.t(kind_key("ui.cards.search_placeholder")))]
       filters << Form::Field.new("category", I18n.t("ui.cards.category"), "select", category_id.try(&.to_s) || "",
-        options: [option("", I18n.t("ui.cards.all_categories"))] + categories.map { |item| option(item.id.to_s, item.name) })
+        options: [option("", I18n.t("ui.cards.all_categories"))] +
+                 categories.map { |item| option(item.id.to_s, category_label(item.code, item.name)) })
       unless items
-        filters << Form::Field.new("kind", I18n.t("ui.cards.kind"), "select", kind || "",
-          options: [option("", I18n.t("ui.cards.all_kinds"))] + kinds.map { |item| option(item, kind_label(item)) })
+        filters << Form::Field.new("kind", I18n.t(kind_key("ui.cards.kind")), "select", kind || "",
+          options: [option("", I18n.t(kind_key("ui.cards.all_kinds")))] + kinds.map { |item| option(item, kind_label(item)) })
       end
       filters << Form::Field.new("status", I18n.t("ui.fiscal_years.status"), "select", query("status"), options: [
         option("", I18n.t("ui.cards.active_only")), option("inactive", I18n.t("ui.cards.inactive_only")),
@@ -368,7 +369,7 @@ module PartiduoUi
         cells = [
           Table::Cell.new(card.code, reverse("cards:show", id: card.id)),
           Table::Cell.new(card.name),
-          Table::Cell.new(card.category_name),
+          Table::Cell.new(category_label(card.category_code, card.category_name)),
           Table::Cell.new(card.vat_number.presence || card.siren),
           Table::Cell.new(card.address.try(&.city) || ""),
           Table::Cell.new(card.email),
@@ -395,7 +396,7 @@ module PartiduoUi
         Table::Row.new([
           Table::Cell.new(card.code, reverse("cards:show", id: card.id)),
           Table::Cell.new(card.name),
-          Table::Cell.new(card.category_name),
+          Table::Cell.new(category_label(card.category_code, card.category_name)),
           Table::Cell.new(unit_label(card.unit_code)),
           Table::Cell.new(price(card.sale_price), sort: card.sale_price || BigDecimal.new(-1), csv: fmt.csv_amount(card.sale_price, 4)),
           Table::Cell.new(price(card.purchase_price), sort: card.purchase_price || BigDecimal.new(-1), csv: fmt.csv_amount(card.purchase_price, 4)),
@@ -444,7 +445,7 @@ module PartiduoUi
     end
 
     private def show(category : Partiduo::Api::Cards::CategoryView?, form : Form?, items : Bool)
-      choices = categories_for(items).map { |item| option(item.id.to_s, "#{item.name} (#{kind_label(item.kind)})") }
+      choices = categories_for(items).map { |item| option(item.id.to_s, "#{category_label(item.code, item.name)} (#{kind_label(item.kind)})") }
       unless category
         choices.unshift(option("", I18n.t("ui.cards.choose_category")))
       end
@@ -514,8 +515,8 @@ module PartiduoUi
       Screen::Section.new(I18n.t("ui.cards.identification"), [
         Screen::Item.new(I18n.t("ui.cards.code"), card.code, mono: true),
         Screen::Item.new(I18n.t("ui.cards.name"), card.name),
-        Screen::Item.new(I18n.t("ui.cards.category"), card.category_name),
-        Screen::Item.new(I18n.t("ui.cards.kind"), kind_label(card.kind)),
+        Screen::Item.new(I18n.t("ui.cards.category"), category_label(card.category_code, card.category_name)),
+        Screen::Item.new(I18n.t(kind_key("ui.cards.kind")), kind_label(card.kind)),
         Screen::Item.new(I18n.t("ui.cards.description"), card.description),
         Screen::Item.new(I18n.t("ui.cards.created_at"), fmt.timestamp_date(card.created_at), mono: true),
         Screen::Item.new(I18n.t("ui.cards.updated_at"), fmt.timestamp_date(card.updated_at), mono: true),

@@ -132,6 +132,7 @@ fr:
         cards_list: "Contacts"
         core_company: "Foyer"
         acc_accounts: "Comptes et contacts"
+        cards_categories: "Catégories de contacts"
       company:
         edit: "Modifier le foyer"
         intro: "Identité du foyer, reprise dans les mentions des documents. Le régime fiscal ne change plus après la création."
@@ -144,6 +145,22 @@ fr:
         empty: "Aucun contact."
         csv_name: "contacts"
         search_placeholder: "Nom, code, description…"
+        all_kinds: "Tous les types"
+        kind: "Type de contact"
+        kinds:
+          customer: "Payeur"
+          supplier: "Prestataire"
+          bank: "Banque"
+          employee: "Employé à domicile"
+          contact: "Contact"
+          other: "Autre"
+        categories:
+          customer: "Payeurs"
+          supplier: "Prestataires et commerçants"
+          bank: "Banques"
+          employee: "Employés à domicile"
+          contact: "Contacts"
+          tax_authority: "Administrations"
       accounts:
         selection: "Compte ou contact consulté"
         pick: "Compte ou contact"
@@ -152,6 +169,8 @@ fr:
       tabs:
         label: "Foyer"
         identity: "Identité du foyer"
+      categories:
+        intro: "Les catégories rangent les contacts (payeurs, prestataires, banques…) et définissent leurs attributs propres."
     search:
       title: "Recherche"
       query: "Recherche : « %{q} »"

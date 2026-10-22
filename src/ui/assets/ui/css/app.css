@@ -255,10 +255,10 @@ a.pd-tile:hover { border-color: var(--pd-focus); }
 .pd-entry-grid .field { margin: 0; }
 .pd-entry-grid .pd-wide { grid-column: span 2; }
 .pd-lines td, .pd-inv-lines td { padding: .25rem .35rem; vertical-align: top; }
-.pd-lines input, .pd-lines select, .pd-inv-lines input, .pd-inv-lines select { width: 100%; min-height: 36px; border: 1px solid var(--pd-field-border); background: var(--pd-surface); color: var(--pd-ink);
+.pd-lines input, .pd-lines select, .pd-inv-lines input, .pd-inv-lines select { width: 100%; min-height: 36px; border: 1px solid var(--pd-field-border); background: var(--pd-field-bg); color: var(--pd-field-ink);
   font: inherit; padding: .35rem .45rem; border-radius: var(--bulma-radius-small); }
 .pd-lines input:hover, .pd-lines select:hover, .pd-inv-lines input:hover, .pd-inv-lines select:hover { border-color: var(--pd-ink); }
-.pd-lines input:focus, .pd-lines select:focus, .pd-inv-lines input:focus, .pd-inv-lines select:focus { outline: 2px solid var(--pd-focus); outline-offset: 0; background: var(--pd-surface); }
+.pd-lines input:focus, .pd-lines select:focus, .pd-inv-lines input:focus, .pd-inv-lines select:focus { outline: 2px solid var(--pd-focus); outline-offset: 0; background: var(--pd-field-bg); }
 .pd-lines input[aria-invalid="true"], .pd-inv-lines input[aria-invalid="true"] { border-color: var(--pd-gap); }
 .pd-lines input.amount, .pd-lines input.pd-mono, .pd-inv-lines .num, .pd-inv-lines .pd-mono { font-family: var(--bulma-family-code); }
 .pd-inv-lines .num { text-align: end; }
@@ -394,8 +394,11 @@ img.pd-attachment-preview { min-height: 0; height: auto; object-fit: contain; }
    le bouton ne ferait rien et le menu reste affiché) */
 @media (max-width: 1279.98px) {
   .pd-js .pd-burger { display: inline-flex; }
-  .pd-app.is-menu-collapsed { grid-template-columns: minmax(0, 1fr); }
-  .pd-app.is-menu-collapsed .pd-side { display: none; }
+  /* .pd-menu-collapsed : repli gardé sur le poste, posé sur <html> par
+     early.js avant le premier affichage, en attendant que shell.js le
+     reporte sur la coquille (D-UI-079). */
+  .pd-app.is-menu-collapsed, .pd-menu-collapsed .pd-app { grid-template-columns: minmax(0, 1fr); }
+  .pd-app.is-menu-collapsed .pd-side, .pd-menu-collapsed .pd-side { display: none; }
   .pd-grid2 { grid-template-columns: minmax(0, 1fr); }
 }
 

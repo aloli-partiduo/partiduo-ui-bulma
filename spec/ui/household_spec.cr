@@ -235,6 +235,46 @@ describe "Dossier foyer : écran « Foyer », contacts, comptes (D-FOY-009)" do
     form.should contain("Nouveau contact")
   end
 
+  it "dit le type et les catégories des contacts dans le vocabulaire du foyer, en fr, en et nl" do
+    browser = household_books
+    {"fr" => {"Tous les types", "Type de contact", "Payeurs", "Prestataires et commerçants", "Employés à domicile",
+              "Catégories de contacts", "Payeur"},
+     "en" => {"All types", "Contact type", "Payers", "Providers and shops", "Household employees",
+              "Contact categories", "Payer"},
+     "nl" => {"Alle soorten contacten", "Soort contact", "Betalers", "Dienstverleners en winkels", "Huispersoneel",
+              "Contactcategorieën", "Betaler"}}.each do |locale, (all_kinds, kind, customers, suppliers, employees, categories, payer)|
+      browser.post("/language", {"locale" => locale, "next" => "/"})
+      I18n.with_locale(locale) do
+        page = browser.get(Marten.routes.reverse("cards:index")).html
+        page.should contain(">#{all_kinds}</option>")
+        page.should contain(kind)
+        page.should contain(">#{customers}</option>")
+        page.should contain(">#{suppliers}</option>")
+        page.should contain(">#{employees}</option>")
+        page.should_not contain(">#{I18n.t("ui.cards.all_kinds")}</option>")
+        page.should_not contain(">#{I18n.t("cards.initial.categories.customer")}</option>")
+        listing = browser.get(Marten.routes.reverse("cards:categories")).html
+        listing.should contain("<h1>#{categories}")
+        listing.should contain(customers)
+        listing.should contain(payer)
+        listing.should_not contain(I18n.t("cards.initial.categories.sale"))
+        listing.should_not contain("missing translation")
+        form = browser.get("#{Marten.routes.reverse("cards:new")}?for=parties").html
+        form.should contain("#{customers} (#{payer})")
+      end
+    end
+  end
+
+  it "garde le nom d'une catégorie renommée par l'utilisateur" do
+    browser = household_books
+    category = Partiduo::Api::Cards.categories(Books.system).find! { |item| item.code == "CUSTOMER" }
+    Partiduo::Api::Cards.update_category(Books.system, category.id, Partiduo::Api::Cards::CategoryInput.new(
+      code: "CUSTOMER", name: "Locataires", kind: "customer")).value!
+    page = browser.get(Marten.routes.reverse("cards:index")).html
+    page.should contain(">Locataires</option>")
+    page.should_not contain(">Payeurs</option>")
+  end
+
   it "montre et propose le nom et l'adresse du foyer, sans champ d'entreprise, et garde leurs valeurs" do
     browser = household_books
     settings = Partiduo::Api::Core.settings(Books.system)
@@ -336,5 +376,11 @@ describe "Dossier d'entreprise inchangé par le type foyer" do
     cards = browser.get(Marten.routes.reverse("cards:index")).html
     cards.should contain("Articles et services")
     cards.should contain("Nouveau tiers")
+    cards.should contain(">Toutes les natures</option>")
+    cards.should contain(">Clients</option>")
+    cards.should_not contain("Payeurs")
+    categories = browser.get(Marten.routes.reverse("cards:categories")).html
+    categories.should contain("<h1>Catégories de fiches")
+    categories.should contain("Ventes : articles et services")
   end
 end

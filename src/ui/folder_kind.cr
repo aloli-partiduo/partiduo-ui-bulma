@@ -52,8 +52,24 @@ module PartiduoUi
         "ui.accounts.pick"                  => "ui.household.accounts.pick",
         "ui.accounts.intro"                 => "ui.household.accounts.intro",
         "ui.accounts.not_found"             => "ui.household.accounts.not_found",
+        "ui.cards.all_kinds"                => "ui.household.cards.all_kinds",
+        "ui.cards.kind"                     => "ui.household.cards.kind",
+        "cards.menu.cards_categories"       => "ui.household.menu.cards_categories",
+        "ui.categories.intro"               => "ui.household.categories.intro",
+        "ui.categories.kind"                => "ui.household.cards.kind",
       },
     }
+
+    # Natures de fiches dites dans le vocabulaire d'un foyer (« Payeur »,
+    # « Prestataire », « Employé à domicile »…) : `ui.household.cards.kinds.*`.
+    # Un foyer n'a pas d'articles (`item`), qui gardent le libellé du cœur.
+    HOUSEHOLD_CARD_KINDS = %w[customer supplier bank employee contact other]
+
+    # Catégories créées au provisionnement (`Partiduo::Cards::Defaults`) que
+    # le foyer nomme dans son vocabulaire (« Payeurs », « Prestataires et
+    # commerçants »…), tant qu'elles portent le nom donné à la création, dans
+    # l'une des langues : un nom choisi par l'utilisateur est gardé.
+    HOUSEHOLD_CATEGORIES = %w[CUSTOMER SUPPLIER BANK EMPLOYEE CONTACT TAX_AUTHORITY]
 
     # Champs de la société propres à une entreprise, que l'écran « Foyer »
     # ne montre ni ne propose (forme juridique, capital, RCS, SIREN, TVA
@@ -105,6 +121,31 @@ module PartiduoUi
 
     def self.label_key(request : Marten::HTTP::Request, key : String) : String
       label_key(of(request), key)
+    end
+
+    # Clé i18n de la nature d'une fiche dans ce type de dossier
+    # (`cards.kinds.customer`, « Payeur » dans un foyer).
+    def self.card_kind_key(kind : String, card_kind : String) : String
+      if kind == HOUSEHOLD && HOUSEHOLD_CARD_KINDS.includes?(card_kind)
+        "ui.household.cards.kinds.#{card_kind}"
+      else
+        "cards.kinds.#{card_kind}"
+      end
+    end
+
+    # Nom d'une catégorie de fiches dans ce type de dossier : celui du foyer
+    # pour une catégorie du provisionnement qui garde son nom d'origine
+    # (`HOUSEHOLD_CATEGORIES`), sinon le nom enregistré.
+    def self.category_name(kind : String, code : String, name : String) : String
+      return name unless kind == HOUSEHOLD && HOUSEHOLD_CATEGORIES.includes?(code)
+      key = "cards.initial.categories.#{code.downcase}"
+      return name unless Partiduo::LOCALES.any? { |locale| I18n.with_locale(locale) { I18n.t(key) } == name }
+      I18n.t("ui.household.cards.categories.#{code.downcase}")
+    end
+
+    # Natures proposées pour une catégorie : sans les articles dans un foyer.
+    def self.card_kinds(kind : String, kinds : Array(String)) : Array(String)
+      kind == HOUSEHOLD ? kinds - ["item"] : kinds
     end
 
     # Champ de la société montré dans ce type de dossier.

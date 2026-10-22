@@ -132,6 +132,7 @@ nl:
         cards_list: "Contacten"
         core_company: "Huishouden"
         acc_accounts: "Rekeningen en contacten"
+        cards_categories: "Contactcategorieën"
       company:
         edit: "Huishouden wijzigen"
         intro: "Identiteit van het huishouden, overgenomen in de vermeldingen op documenten. Het belastingstelsel wijzigt niet meer na de aanmaak."
@@ -144,6 +145,22 @@ nl:
         empty: "Geen contact."
         csv_name: "contacten"
         search_placeholder: "Naam, code, beschrijving…"
+        all_kinds: "Alle soorten contacten"
+        kind: "Soort contact"
+        kinds:
+          customer: "Betaler"
+          supplier: "Dienstverlener"
+          bank: "Bank"
+          employee: "Huispersoneel"
+          contact: "Contactpersoon"
+          other: "Andere"
+        categories:
+          customer: "Betalers"
+          supplier: "Dienstverleners en winkels"
+          bank: "Banken"
+          employee: "Huispersoneel"
+          contact: "Contactpersonen"
+          tax_authority: "Belastingdiensten en overheden"
       accounts:
         selection: "Getoonde rekening of contact"
         pick: "Rekening of contact"
@@ -152,6 +169,8 @@ nl:
       tabs:
         label: "Huishouden"
         identity: "Identiteit van het huishouden"
+      categories:
+        intro: "Categorieën ordenen de contacten (betalers, dienstverleners, banken…) en bepalen hun eigen kenmerken."
     search:
       title: "Zoeken"
       query: "Zoekopdracht: „%{q}”"

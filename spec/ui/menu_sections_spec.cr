@@ -50,7 +50,7 @@ end
 
 # Exécute shell.js sur le DOM simulé ; `before` règle l'environnement avant
 # le chargement du script (stockage déjà rempli ou indisponible).
-private def run_script(probe : String, before : String = "") : Array(String)
+private def run_script(probe : String, before : String = "", scripts : Array(String) = ["shell.js"]) : Array(String)
   engine = PartiduoUi::SpecSupport.javascript_engine
   pending!("aucun moteur JavaScript autonome (JavaScriptCore) ; PARTIDUO_JS_ENGINE pour en indiquer un") unless engine
   dom = File.tempname("partiduo-menu-dom", ".js")
@@ -59,8 +59,8 @@ private def run_script(probe : String, before : String = "") : Array(String)
   File.write(test, probe)
   output = IO::Memory.new
   error = IO::Memory.new
-  status = Process.run(engine, [dom, PartiduoUi::SpecSupport.path("src", "ui", "assets", "ui", "js", "shell.js"), test],
-    output: output, error: error)
+  files = scripts.map { |name| PartiduoUi::SpecSupport.path("src", "ui", "assets", "ui", "js", name) }
+  status = Process.run(engine, [dom] + files + [test], output: output, error: error)
   status.success?.should be_true, "#{error}#{output}"
   output.to_s.lines
 ensure
@@ -231,6 +231,16 @@ describe "Rubriques repliables du menu latéral (D-UI-078)" do
       click("C");
       print("js=" + document.documentElement.classList.contains("pd-js") + " " + state());
       JS
+  end
+
+  it "pose pd-js et le repli gardé dès l'en-tête, avant shell.js (early.js, D-UI-079)" do
+    probe = %(print(document.documentElement.classList.contains("pd-js") + " " + document.documentElement.classList.contains("pd-menu-collapsed"));)
+    run_script(probe, scripts: ["early.js"]).should eq(["true false"])
+    run_script(probe, %(store["partiduo.menu.collapsed"] = "1";), ["early.js"]).should eq(["true true"])
+    refused = %(window.localStorage = { getItem: function () { throw new Error("refusé"); } };)
+    run_script(probe, refused, ["early.js"]).should eq(["true false"])
+    # shell.js reprend le repli sur la coquille et le retire de <html>.
+    run_script(probe, %(store["partiduo.menu.collapsed"] = "1";), ["early.js", "shell.js"]).should eq(["true false"])
   end
 
   it "suit l'entrée active quand HTMX change l'adresse sans recharger (shell.js)" do

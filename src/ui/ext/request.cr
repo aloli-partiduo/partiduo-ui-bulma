@@ -17,3 +17,12 @@ class Marten::HTTP::Request
   # par `PartiduoUi::FolderKind.of`.
   property partiduo_folder_kind : String? = nil
 end
+
+class Marten::HTTP::Request
+  # Chemin de la requête HTTP sous-jacente remplacé une fois la réponse
+  # produite, pour que le journal du serveur n'y lise pas le secret d'une
+  # adresse publique (`PartiduoUi::Extensions.mask_logged_path`).
+  def partiduo_mask_logged_path(path : String) : Nil
+    @request.path = path
+  end
+end

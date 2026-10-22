@@ -294,7 +294,7 @@ module PartiduoUi
     end
 
     def own_fields : Array(Form::Field)
-      options = categories.map { |item| option(item.id.to_s, "#{item.name} (#{I18n.t("cards.kinds.#{item.kind}")})") }
+      options = categories.map { |item| option(item.id.to_s, "#{category_label(item.code, item.name)} (#{card_kind_label(item.kind)})") }
       [
         Form::Field.new("category", I18n.t("ui.cards.category"), "select", category.try(&.id.to_s) || "", options: options,
           required: true),

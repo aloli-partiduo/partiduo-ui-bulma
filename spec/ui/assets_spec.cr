@@ -11,6 +11,7 @@ describe "Fichiers statiques servis par Marten" do
     "ui/css/app.css"                     => "text/css",
     "ui/js/htmx.min.js"                  => "javascript",
     "ui/js/opal/demo.js"                 => "javascript",
+    "ui/js/early.js"                     => "javascript",
     "ui/js/shell.js"                     => "javascript",
     "ui/js/passkey.js"                   => "javascript",
     "ui/icons/sprite.svg"                => "image/svg+xml",

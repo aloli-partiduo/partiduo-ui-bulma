@@ -74,6 +74,36 @@ describe "Route publique d'extension (A-FRM-1)" do
   end
 end
 
+describe "Point d'entrée public : journal et refus CSRF (D-AMD-037)" do
+  it "pose les en-têtes stricts sur le refus de la protection CSRF, rendu avant le handler" do
+    PartiduoUi::Reference.provision
+    activate("UIPUB")
+    client = Marten::Spec::Client.new(disable_request_forgery_protection: false)
+    refused = client.post("/p/uipub/open", data: {"texte" => "x"})
+    refused.status.should eq(403)
+    PartiduoUi::Extensions::PUBLIC_HEADERS.each { |name, value| refused.headers[name].should eq(value) }
+  end
+
+  it "masque le chemin servi dans le journal du serveur, que l'interface réponde seule ou non" do
+    PartiduoUi::Reference.provision
+    served = ->(path : String, code : String, rest : String) do
+      raw = HTTP::Request.new("GET", path)
+      status = PartiduoUi::PublicExtensionHandler.new(Marten::HTTP::Request.new(raw), code: code, path: rest)
+        .process_dispatch.status
+      {status, raw.path}
+    end
+    # Extension inactive : l'interface répond seule (404).
+    served.call("/p/uipub/hello/secret", "uipub", "hello/secret").should eq({404, "/p/uipub/…"})
+    activate("UIPUB")
+    served.call("/p/uipub/hello/secret", "uipub", "hello/secret").should eq({200, "/p/uipub/…"})
+    served.call("/p/inconnue/secret", "inconnue", "secret").should eq({404, "/p/…"})
+
+    raw = HTTP::Request.new("GET", "/f/secret")
+    PartiduoUi::Extensions.mask_logged_path(Marten::HTTP::Request.new(raw), "/f/…")
+    raw.path.should eq("/f/…")
+  end
+end
+
 describe "Export CSV commun : formules neutralisées (A-FRM-5)" do
   it "préfixe d'une apostrophe une cellule qui commence par = + - @, tabulation ou retour, sauf un nombre" do
     PartiduoUi::Table.csv_safe("=HYPERLINK(\"http://x\")").should eq("'=HYPERLINK(\"http://x\")")
