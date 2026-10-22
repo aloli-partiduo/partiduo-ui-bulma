@@ -235,21 +235,32 @@ describe "Traductions de toutes les pages (fr, en, nl)" do
     explorer.crawl(browser, "entreprise", seeds)
     explorer.visit(PartiduoUi::Browser.new, "anonyme, jetons valides", token_pages)
     explorer.visit_placeholders(browser, "entreprise, objets inconnus")
-    explorer.crawl(PartiduoUi::Accounts.signed_in("bob@example.com"), "entreprise, droits réduits")
+    reduced = PartiduoUi::Accounts.signed_in("bob@example.com")
+    explorer.crawl(reduced, "entreprise, droits réduits")
+    # Envois de chaque formulaire relevé (vide, valeurs fausses, bouton
+    # d'action tel quel) : refus de droits d'abord, puis administrateur.
+    explorer.submit_forms(reduced, "entreprise, droits réduits", explorer.all_forms)
+    explorer.submit_forms(browser, "entreprise")
     fresh!
 
     micro
-    explorer.crawl(PartiduoUi::Accounts.signed_in, "micro, simplifiée")
+    member = PartiduoUi::Accounts.signed_in
+    explorer.crawl(member, "micro, simplifiée")
     explorer.crawl(accountant, "micro, complète")
+    explorer.submit_forms(member, "micro, simplifiée")
     fresh!
 
     liberal
-    explorer.crawl(PartiduoUi::Accounts.signed_in, "libéral, simplifiée")
+    member = PartiduoUi::Accounts.signed_in
+    explorer.crawl(member, "libéral, simplifiée")
     explorer.crawl(accountant, "libéral, complète")
+    explorer.submit_forms(member, "libéral, simplifiée")
     fresh!
 
     household
-    explorer.crawl(PartiduoUi::Accounts.signed_in, "foyer")
+    member = PartiduoUi::Accounts.signed_in
+    explorer.crawl(member, "foyer")
+    explorer.submit_forms(member, "foyer")
 
     puts "\nTraductions : #{explorer.report}"
     (explorer.failures + explorer.unreached.map { |route| "route jamais atteinte : #{route}" }).should eq([] of String)

@@ -224,7 +224,7 @@ module PartiduoUi
       today = Partiduo::Api::Core.today
       month = begin
         Time.parse_utc("#{field("month")}-01", "%Y-%m-%d")
-      rescue Time::Format::Error
+      rescue Time::Format::Error | ArgumentError
         today
       end
       from_card = query("customer").to_i64?

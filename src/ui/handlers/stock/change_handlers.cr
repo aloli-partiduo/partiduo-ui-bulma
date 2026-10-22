@@ -138,7 +138,7 @@ module PartiduoUi
       end
       result = Stk.record_change(current.actor, input)
       if change = result.value?
-        flash["success"] = I18n.t("ui.stock.change_recorded", count: change.movements.size)
+        flash["success"] = I18n.t("ui.stock.change_recorded", {"count" => change.movements.size.to_s})
         return go(change_url(change.id))
       end
       show(refused(values, form_errors, result.errors))
@@ -257,7 +257,7 @@ module PartiduoUi
       end
       result = Stk.record_inventory(current.actor, input)
       if change = result.value?
-        flash["success"] = I18n.t("ui.stock.inventory_recorded", count: change.movements.size)
+        flash["success"] = I18n.t("ui.stock.inventory_recorded", {"count" => change.movements.size.to_s})
         return go(change_url(change.id))
       end
       show(refused(repository_id, day, proposal, form_errors, result.errors), true)

@@ -91,7 +91,7 @@ module PartiduoUi
 
     def terms_label(code : String) : String
       terms, _, days = code.partition(':')
-      terms == "on_receipt" ? I18n.t("ui.invoicing.terms.on_receipt") : I18n.t("ui.invoicing.terms.#{terms}", days: days)
+      terms == "on_receipt" ? I18n.t("ui.invoicing.terms.on_receipt") : I18n.t("ui.invoicing.terms.#{terms}", days: days, default: code)
     end
 
     # Adresses de livraison proposées : celle de la fiche par défaut, aucune,

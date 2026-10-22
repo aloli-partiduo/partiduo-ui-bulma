@@ -253,7 +253,7 @@ module PartiduoUi
       table = report_table(title, columns, rows, "pd-stock-valuation", footer: [total])
       missing = view.rows.count { |row| row.value.nil? && !row.quantity.zero? }
       summary = [Screen::Item.new(I18n.t("ui.stock.total_value"), fmt.amount(view.total), mono: true)]
-      intro = missing > 0 ? I18n.t("ui.stock.missing_cost", count: missing) : I18n.t("ui.stock.valuation_intro")
+      intro = missing > 0 ? I18n.t("ui.stock.missing_cost", {"count" => missing.to_s}) : I18n.t("ui.stock.valuation_intro")
       stock_page(filters_form([date_field("date", "ui.stock.date", day), repository_field] of Form::Field?),
         [Screen::Section.new(I18n.t("ui.stock.valuation_on", date: fmt.date(view.date)), table: table)], summary, intro)
     end

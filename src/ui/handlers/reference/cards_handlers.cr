@@ -313,7 +313,7 @@ module PartiduoUi
         actions << link_action(items ? "ui.cards.new_item" : kind_key("ui.cards.new_party"), new_url, "primary", "plus")
       end
       import_action(category_id).try { |action| actions << action }
-      intro = Partiduo::Api::Cards.count_cards(actor, card_query) > LIST_LIMIT ? I18n.t("ui.cards.truncated", count: LIST_LIMIT) : nil
+      intro = Partiduo::Api::Cards.count_cards(actor, card_query) > LIST_LIMIT ? I18n.t("ui.cards.truncated", {"count" => LIST_LIMIT.to_s}) : nil
       title = I18n.t(items ? "ui.cards.items" : kind_key("ui.cards.parties"))
       list_page(title, table, [crumb("core.menu.reference")], items ? "ui.cards.csv_name_items" : kind_key("ui.cards.csv_name"), actions, tabs(items),
         I18n.t(kind_key("cards.menu.cards_list")), list_filters(items, categories, category_id, kinds, kind), intro, filter: false)

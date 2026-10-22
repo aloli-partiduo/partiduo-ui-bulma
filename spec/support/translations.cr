@@ -35,25 +35,35 @@ module PartiduoUi
 
     # Attributs lus par une personne (les autres, techniques ou `data-*`,
     # ne sont pas contrôlés).
-    HUMAN_ATTRIBUTES = %w[title placeholder aria-label aria-description aria-placeholder alt label]
+    HUMAN_ATTRIBUTES = %w[title placeholder aria-label aria-description aria-placeholder alt label data-pd-confirm]
 
     # --- Catalogue chargé ---------------------------------------------------------
 
     @@catalog : Hash(String, Set(String))? = nil
+    @@texts : Hash(String, Hash(String, I18n::TranslationsHashValues))? = nil
     @@namespaces : Set(String)? = nil
 
     # Clés de toutes les traductions chargées (cœur, interface, extensions
     # composées), par langue : feuilles et nœuds (`ui.menu` comme
     # `ui.menu.dashboard`), pour admettre une clé de pluriel ou de sous-arbre.
     def self.catalog : Hash(String, Set(String))
-      @@catalog ||= begin
-        keys = Hash(String, Set(String)).new { |hash, locale| hash[locale] = Set(String).new }
+      @@catalog ||= texts.transform_values(&.keys.to_set)
+    end
+
+    # Valeur de chaque clé (feuille ou nœud), par langue, dans l'ordre de
+    # chargement de Marten (la dernière l'emporte).
+    def self.texts : Hash(String, Hash(String, I18n::TranslationsHashValues))
+      @@texts ||= begin
+        values = Hash(String, Hash(String, I18n::TranslationsHashValues)).new do |hash, locale|
+          hash[locale] = {} of String => I18n::TranslationsHashValues
+        end
+        LOCALES.each { |locale| values[locale] }
         I18n.config.loaders.each do |loader|
           loader.load.each do |locale, data|
-            flatten(data, "", keys[locale]) if data.is_a?(Hash)
+            flatten(data, "", values[locale]) if data.is_a?(Hash)
           end
         end
-        keys
+        values
       end
     end
 
@@ -72,11 +82,91 @@ module PartiduoUi
       catalog[locale].includes?(key)
     end
 
-    private def self.flatten(data : I18n::TranslationsHash, prefix : String, into : Set(String)) : Nil
+    private def self.flatten(data : I18n::TranslationsHash, prefix : String,
+                             into : Hash(String, I18n::TranslationsHashValues)) : Nil
       data.each do |name, value|
         key = prefix.empty? ? name : "#{prefix}.#{name}"
-        into << key
+        into[key] = value
         flatten(value, key, into) if value.is_a?(Hash)
+      end
+    end
+
+    # Défaut d'une recherche de traduction dans une langue : clé absente,
+    # sous-arbre demandé sans compte, ou interpolation à laquelle aucun
+    # paramètre ne répond (`names`, `count` compris ; non contrôlé si `nil`).
+    # `nil` si rien.
+    def self.lookup_problem(locale : String, key : String, names : Set(String)?, plural : Bool) : String?
+      value = texts[locale][key]?
+      return "#{locale}.#{key} absente" if value.nil? && !texts[locale].has_key?(key)
+      return "#{locale}.#{key} recherchée avec un compte, sans formes du pluriel" if plural && !value.is_a?(Hash)
+      strings = case value
+                when Hash
+                  return "#{locale}.#{key} est un sous-arbre, demandé sans compte" unless plural
+                  plurals = [] of String
+                  value.each_value { |form| plurals << form if form.is_a?(String) }
+                  plurals
+                when Array then [value.join("\n")]
+                else            [value.to_s]
+                end
+      return if names.nil?
+      unresolved = strings.flat_map(&.scan(/%\{(\w+)\}/).map(&.[1])).uniq!.reject { |name| names.includes?(name) }
+      "#{locale}.#{key} : #{unresolved.map { |name| "%{#{name}}" }.join(" ")} sans paramètre" unless unresolved.empty?
+    end
+
+    # --- Sonde des recherches de traduction --------------------------------------
+    #
+    # Toute recherche faite pendant la suite de specs (`I18n.t` du code,
+    # `{% translate %}` des gabarits, message d'une erreur du contrat,
+    # courriel, PDF, réponse à un envoi…), quelle que soit la langue active :
+    # la clé doit exister en fr, en et nl (pluriel compris). Une recherche
+    # avec `default:` est volontairement tolérante et n'est pas contrôlée. Les défauts sont
+    # rapportés en fin de suite, qui échoue alors (`Probe.report`).
+    module Probe
+      @@failures = {} of String => String
+      @@lookups = 0
+
+      def self.failures : Hash(String, String)
+        @@failures
+      end
+
+      def self.lookups : Int32
+        @@lookups
+      end
+
+      # Recherche faite par `I18n::Catalog#translate`.
+      # Recherche faite par crystal-i18n (`I18n::Catalog#fetch_translation!`,
+      # clé complète, portée appliquée). Les paramètres n'y sont plus connus :
+      # l'existence de la clé dans chaque langue est contrôlée ici ; les
+      # interpolations, par la parité des locales et le texte rendu.
+      def self.lookup(key : String, count, default) : Nil
+        return unless default.nil?
+        @@lookups += 1
+        check(key, nil, !count.nil?)
+      end
+
+      private def self.check(key : String, names : Set(String)?, plural : Bool) : Nil
+        LOCALES.each do |locale|
+          problem = Translations.lookup_problem(locale, key, names, plural)
+          next if problem.nil? || @@failures.has_key?(problem)
+          @@failures[problem] = origin
+        end
+      end
+
+      PROBE_FILE = __FILE__
+
+      # Premier appelant du code de Partiduo (handler, service, gabarit
+      # compilé, spec), hors de crystal-i18n, du contrat d'erreurs et de cette
+      # sonde.
+      private def self.origin : String
+        caller.find do |frame|
+          frame.includes?("partiduo") && !frame.includes?("/i18n/") && !frame.includes?(PROBE_FILE) &&
+            !frame.includes?("api/result.cr") && !frame.includes?("api/field_error.cr")
+        end.try(&.strip) || "?"
+      end
+
+      # Défauts relevés, un par ligne, avec leur premier appelant.
+      def self.report : Array(String)
+        @@failures.map { |problem, where| "#{problem} (#{where})" }.sort!
       end
     end
 
@@ -143,12 +233,43 @@ module PartiduoUi
       found
     end
 
-    # Clés citées absentes du catalogue chargé, dans une langue au moins.
+    # Recherche avec un compte (`I18n.t("…", count: n)`, `{% translate "…"
+    # count: n %}`) : crystal-i18n cherche alors une forme du pluriel
+    # (`….one`, `….other`), et une clé simple s'affiche « missing
+    # translation: fr.….other ».
+    COUNTED = [
+      /I18n\.t(?:ranslate)?!?\(\s*"([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)"[^)]*?\bcount:/,
+      /\{%-?\s*(?:translate|t)\s+["']([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+)["'][^%]*?\bcount:/,
+    ]
+
+    # Clés citées absentes du catalogue chargé, dans une langue au moins, et
+    # clés recherchées avec un compte sans formes du pluriel.
     def self.unknown_keys(root : String, globs : Array(String)) : Array(String)
-      usages(root, globs).compact_map do |usage|
+      absent = usages(root, globs).compact_map do |usage|
         missing = LOCALES.reject { |locale| known?(locale, usage.key) }
         "#{usage.file}:#{usage.line} : #{usage.key} absente en #{missing.join(", ")}" unless missing.empty?
-      end.uniq!
+      end
+      (absent + singular_counts(root, globs)).uniq!
+    end
+
+    # Clés recherchées avec un compte qui ne sont pas, dans une langue au
+    # moins, un sous-arbre de formes du pluriel.
+    def self.singular_counts(root : String, globs : Array(String)) : Array(String)
+      found = [] of String
+      Dir.glob(globs.map { |glob| File.join(root, glob) }).sort!.each do |path|
+        relative = Path[path].relative_to(root).to_s
+        File.read_lines(path).each_with_index(1) do |text, number|
+          next if text.lstrip.starts_with?('#') || text.lstrip.starts_with?("{#")
+          COUNTED.each do |pattern|
+            text.scan(pattern) do |match|
+              singular = LOCALES.select { |locale| known?(locale, match[1]) && !texts[locale][match[1]].is_a?(Hash) }
+              next if singular.empty?
+              found << "#{relative}:#{number} : #{match[1]} recherchée avec un compte, sans pluriel en #{singular.join(", ")}"
+            end
+          end
+        end
+      end
+      found
     end
 
     # --- Contrôle du HTML rendu ------------------------------------------------------
@@ -343,7 +464,9 @@ module PartiduoUi
           seen << key
           plain[route.name] += 1 if query.empty?
           html = check_all(browser, route, url, variant)
-          links(html).each { |link| queue << link } if html
+          next unless html
+          links(html).each { |link| queue << link }
+          collect_forms(html, url)
         end
       end
 
@@ -405,7 +528,9 @@ module PartiduoUi
       end
 
       def report : String
-        "#{checked_routes.size} routes, #{checked} pages contrôlées (adresse × langue)"
+        "#{checked_routes.size} routes, #{checked} pages contrôlées (adresse × langue), " \
+        "#{submitted} envois de formulaires (formulaire × variante × langue), " \
+        "#{Probe.lookups} recherches de traduction sondées"
       end
 
       private def fetch(browser : Browser, url : String, locale : String) : Marten::HTTP::Response?
@@ -423,6 +548,172 @@ module PartiduoUi
 
       # Liens internes d'une page : `href`, `hx-get`, `src`, `action`, sans
       # ancre ni export (`format=`).
+      # --- Envois de formulaires ---------------------------------------------------
+
+      # Champ d'un formulaire relevé dans une page : nom, type (`select`,
+      # `textarea`, type d'un `input`), valeur initiale.
+      record Field, name : String, type : String, value : String do
+        # Champ rempli par une personne (ni caché, ni bouton, ni fichier).
+        def editable? : Bool
+          !%w[hidden submit button reset image file].includes?(type)
+        end
+      end
+
+      # Formulaire `POST` relevé dans une page : adresse d'envoi, champs,
+      # envoi par HTMX (`hx-post`), page d'origine.
+      record PostForm, action : String, fields : Array(Field), htmx : Bool, page : String do
+        def editable? : Bool
+          fields.any?(&.editable?)
+        end
+      end
+
+      # Formulaires gardés par route d'envoi (formes de champs différentes).
+      FORMS_PER_ROUTE = 2
+
+      # Routes jamais envoyées : la session de l'exploration y prendrait fin.
+      UNSENT = %w[logout]
+
+      # Formulaires relevés, pas encore envoyés ; tous les formulaires relevés.
+      getter forms = [] of PostForm
+      getter all_forms = [] of PostForm
+      @form_keys = Set(String).new
+      @form_count = Hash(String, Int32).new(0)
+      # Envois contrôlés : formulaire × variante × langue.
+      getter submitted = 0
+
+      # Formulaires `POST` d'une page, dans la portée.
+      def collect_forms(html : String, page : String) : Nil
+        html.scan(/<form\b([^>]*)>(.*?)<\/form>/mi) do |match|
+          attributes = match[1]
+          htmx_action = attribute(attributes, "hx-post")
+          next unless htmx_action || attribute(attributes, "method").try(&.downcase) == "post"
+          action = htmx_action || attribute(attributes, "action").presence || page
+          next unless internal?(action)
+          route = route_for(action.partition('?')[0])
+          next if route.nil? || !in_scope?(route) || UNSENT.includes?(route.name)
+          fields = form_fields(match[2])
+          key = "#{route.name} #{fields.map(&.name).uniq!.sort!.join(',')}"
+          next if @form_keys.includes?(key) || @form_count[route.name] >= FORMS_PER_ROUTE
+          @form_keys << key
+          @form_count[route.name] += 1
+          form = PostForm.new(action, fields, !htmx_action.nil?, page)
+          @forms << form
+          @all_forms << form
+        end
+      end
+
+      # Envoie chaque formulaire relevé depuis le dernier envoi, dans chaque
+      # langue : vide, puis avec des valeurs fausses (texte trop long, nombre
+      # et date invalides, choix inexistant) ; un formulaire sans champ à
+      # remplir (bouton d'action : émettre, supprimer, approuver…) tel quel,
+      # après tous les autres. Contrôlés : la réponse (erreurs du
+      # formulaire, refus), la page où elle redirige (message flash), la
+      # réponse partielle à une requête HTMX et sa redirection
+      # (`HX-Redirect`) ; une erreur 500 est un échec.
+      #
+      # `forms` : par défaut, ceux qui n'ont pas encore été envoyés ;
+      # `all_forms` pour les renvoyer avec un autre compte (refus de droits).
+      def submit_forms(browser : Browser, variant : String, forms : Array(PostForm)? = nil) : Nil
+        pending = (forms || @forms).sort_by { |form| form.editable? ? 0 : 1 }
+        @forms = [] of PostForm if forms.nil?
+        pending.each do |form|
+          route = route_for(form.action.partition('?')[0]) || next
+          if form.editable?
+            submit_all(browser, route, form, "vide", blank(form), variant)
+            submit_all(browser, route, form, "valeurs fausses", wrong(form), variant)
+          else
+            submit_all(browser, route, form, "tel quel", form.fields.map { |field| {field.name, field.value} }, variant)
+          end
+        end
+      end
+
+      private def submit_all(browser : Browser, route : Route, form : PostForm, kind : String,
+                             values : Array(Tuple(String, String)), variant : String) : Nil
+        previous = I18n.locale
+        body = URI::Params.build { |params| values.each { |name, value| params.add(name, value) } }
+        LOCALES.each do |locale|
+          where = "#{variant} #{route.name} POST #{form.action} (#{kind}, depuis #{form.page}) [#{locale}]"
+          send(browser, where, form.action, body, locale, htmx: false)
+          send(browser, where + " HTMX", form.action, body, locale, htmx: true) if form.htmx
+        end
+      ensure
+        I18n.activate(previous) if previous
+      end
+
+      private def send(browser : Browser, where : String, action : String, body : String, locale : String,
+                       htmx : Bool) : Nil
+        browser.jar[Marten.settings.i18n.locale_cookie_name] = locale
+        browser.headers["Accept-Language"] = locale
+        headers = htmx ? {"HX-Request" => "true"} : {} of String => String
+        response = browser.perform_raw(action, body, headers)
+        @submitted += 1
+        inspect_response(response, where)
+        target = response.headers["HX-Redirect"]? || (response.status.in?(300..399) ? response.headers["Location"]? : nil)
+        return unless target && internal?(target)
+        browser.jar[Marten.settings.i18n.locale_cookie_name] = locale
+        inspect_response(browser.get(target), "#{where} → #{target}")
+      rescue ex
+        failures << "#{where} : #{ex.class} #{ex.message}"
+      end
+
+      private def inspect_response(response : Marten::HTTP::Response, where : String) : Nil
+        failures << "#{where} : erreur #{response.status}" if response.status >= 500
+        return unless html?(response)
+        Translations.problems(response.content, literals).each { |problem| failures << "#{where} : #{problem}" }
+      end
+
+      # Champs à remplir vidés ; champs cachés gardés (identifiants), cases
+      # décochées.
+      private def blank(form : PostForm) : Array(Tuple(String, String))
+        form.fields.compact_map do |field|
+          next if field.type.in?("checkbox", "radio", "submit", "button", "reset", "image", "file")
+          {field.name, field.editable? ? "" : field.value}
+        end
+      end
+
+      # Valeurs refusées par les contrôles : texte trop long, nombre, date,
+      # mois et courriel invalides, choix qui n'existe pas.
+      private def wrong(form : PostForm) : Array(Tuple(String, String))
+        form.fields.compact_map do |field|
+          next if field.type.in?("submit", "button", "reset", "image", "file")
+          value = case field.type
+                  when "hidden"            then field.value
+                  when "checkbox", "radio" then field.value.presence || "on"
+                  else                          WRONG.fetch(field.type, "x" * 600)
+                  end
+          {field.name, value}
+        end
+      end
+
+      # Valeur fausse par type de champ ; texte trop long pour les autres.
+      WRONG = {
+        "number" => "abc", "range" => "abc", "date" => "2026-13-45", "datetime-local" => "2026-13-45",
+        "month" => "2026-13", "time" => "25:99", "email" => "pas-un-courriel", "url" => "pas une adresse",
+        "select" => "999999999",
+      }
+
+      private def form_fields(html : String) : Array(Field)
+        fields = [] of Field
+        html.scan(/<(input|select|textarea)\b([^>]*)>/mi) do |match|
+          name = attribute(match[2], "name")
+          next if name.nil? || name.empty?
+          type = match[1].downcase == "input" ? (attribute(match[2], "type").try(&.downcase) || "text") : match[1].downcase
+          fields << Field.new(name, type, attribute(match[2], "value") || "")
+        end
+        fields
+      end
+
+      # Adresse du site (chemin absolu, sans hôte).
+      private def internal?(url : String) : Bool
+        url.starts_with?('/') && !url.starts_with?("//")
+      end
+
+      private def attribute(attributes : String, name : String) : String?
+        attributes.match(/(?:^|\s)#{name}\s*=\s*(?:"([^"]*)"|'([^']*)')/i).try do |match|
+          HTML.unescape(match[1]? || match[2]? || "")
+        end
+      end
+
       private def links(html : String) : Array(String)
         found = [] of String
         html.scan(/\s(?:href|hx-get|src|action)\s*=\s*"([^"]*)"/) do |match|
@@ -434,5 +725,27 @@ module PartiduoUi
         found
       end
     end
+  end
+end
+
+# Sonde des traductions (`PartiduoUi::Translations::Probe`) : chaque
+# recherche passe par `I18n::Catalog#translate`.
+class I18n::Catalog
+  private def fetch_translation!(locale, key, count = nil, default = nil, ongoing_fallback = false)
+    PartiduoUi::Translations::Probe.lookup(key.to_s, count, default) unless ongoing_fallback
+    previous_def
+  end
+end
+
+# Rapport après le résumé des specs (crochet de sortie posé en fin de
+# suite), pour ne pas le masquer.
+Spec.after_suite do
+  at_exit do
+    failures = PartiduoUi::Translations::Probe.report
+    next if failures.empty?
+    STDERR.puts "\nTraductions absentes ou incomplètes relevées pendant la suite " \
+                "(#{failures.size}, sonde de PartiduoUi::Translations) :"
+    failures.each { |failure| STDERR.puts "  #{failure}" }
+    exit 1
   end
 end

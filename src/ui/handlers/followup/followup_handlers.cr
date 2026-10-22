@@ -142,7 +142,7 @@ module PartiduoUi
         icon: "download")
       page_actions << Screen::Action.new(I18n.t("ui.reports.export_pdf"),
         "#{reverse("followup:actions")}?#{URI::Params.encode(params.merge({"format" => "pdf"}))}", icon: "printer")
-      intro = count > LIST_LIMIT ? I18n.t("ui.followup.truncated", count: count, limit: LIST_LIMIT) : nil
+      intro = count > LIST_LIMIT ? I18n.t("ui.followup.truncated", {"count" => count.to_s, "limit" => LIST_LIMIT.to_s}) : nil
       list_page(I18n.t("followup.menu.fup_actions"), table, followup_crumbs, "ui.followup.actions_csv", page_actions,
         filters: filters, intro: intro, filter: false)
     end
@@ -763,7 +763,7 @@ module PartiduoUi
   class FollowupTypesDefaultsHandler < FollowupTypeScreen
     def post
       created = Fup.load_default_action_types(current.actor, I18n.locale)
-      flash["success"] = I18n.t("ui.followup.default_types_loaded", count: created.size)
+      flash["success"] = I18n.t("ui.followup.default_types_loaded", {"count" => created.size.to_s})
       go(reverse("followup:types"))
     end
   end
