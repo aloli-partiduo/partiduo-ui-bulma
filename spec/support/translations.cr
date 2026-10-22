@@ -119,8 +119,9 @@ module PartiduoUi
     # `{% translate %}` des gabarits, message d'une erreur du contrat,
     # courriel, PDF, réponse à un envoi…), quelle que soit la langue active :
     # la clé doit exister en fr, en et nl (pluriel compris). Une recherche
-    # avec `default:` est volontairement tolérante et n'est pas contrôlée. Les défauts sont
-    # rapportés en fin de suite, qui échoue alors (`Probe.report`).
+    # avec `default:` est volontairement tolérante et n'est pas contrôlée,
+    # comme celle d'une spec elle-même. Les défauts sont rapportés en fin de
+    # suite, qui échoue alors (`Probe.report`).
     module Probe
       @@failures = {} of String => String
       @@lookups = 0
@@ -133,13 +134,12 @@ module PartiduoUi
         @@lookups
       end
 
-      # Recherche faite par `I18n::Catalog#translate`.
       # Recherche faite par crystal-i18n (`I18n::Catalog#fetch_translation!`,
       # clé complète, portée appliquée). Les paramètres n'y sont plus connus :
       # l'existence de la clé dans chaque langue est contrôlée ici ; les
       # interpolations, par la parité des locales et le texte rendu.
       def self.lookup(key : String, count, default) : Nil
-        return unless default.nil?
+        return unless default.nil? && @@quiet == 0
         @@lookups += 1
         check(key, nil, !count.nil?)
       end
@@ -148,20 +148,42 @@ module PartiduoUi
         LOCALES.each do |locale|
           problem = Translations.lookup_problem(locale, key, names, plural)
           next if problem.nil? || @@failures.has_key?(problem)
-          @@failures[problem] = origin
+          where = origin
+          @@failures[problem] = where unless spec?(where)
         end
       end
 
-      PROBE_FILE = __FILE__
+      @@quiet = 0
+
+      # Recherche tolérante de crystal-i18n (`fetch_translation`, sans point
+      # d'exclamation : formats des nombres de `I18n.localize`), absence admise.
+      def self.quietly(&)
+        @@quiet += 1
+        yield
+      ensure
+        @@quiet -= 1
+      end
+
+      # Recherche faite par une spec elle-même (contrôle de conventions qui
+      # sonde les clés, erreur factice), et non par le code : pas un défaut.
+      private def self.spec?(where : String) : Bool
+        (where.starts_with?("spec/") || where.includes?("/spec/")) && !where.includes?("spec/support/")
+      end
+
+      # Chemin relatif : la pile cite le fichier par `lib/…` ou par le dépôt.
+      PROBE_FILE = "spec/support/translations.cr"
 
       # Premier appelant du code de Partiduo (handler, service, gabarit
       # compilé, spec), hors de crystal-i18n, du contrat d'erreurs et de cette
       # sonde.
       private def self.origin : String
         caller.find do |frame|
-          frame.includes?("partiduo") && !frame.includes?("/i18n/") && !frame.includes?(PROBE_FILE) &&
+          (!frame.starts_with?('/') || frame.includes?("partiduo")) && !frame.includes?("/i18n/") && !frame.includes?(PROBE_FILE) &&
             !frame.includes?("api/result.cr") && !frame.includes?("api/field_error.cr")
         end.try(&.strip) || "?"
+      rescue
+        # Pile illisible (programme de specs remplacé par une autre suite).
+        "?"
       end
 
       # Défauts relevés, un par ligne, avec leur premier appelant.
@@ -427,10 +449,13 @@ module PartiduoUi
       # Textes affichés tels quels à dessein (voir `Translations.problems`).
       getter literals : Array(String)
 
+      # `unsent` : nom de route → motif (formulaire jamais envoyé : appel
+      # d'un service externe que la spec ne simule pas…).
       def initialize(@exclusions : Hash(String, String) = {} of String => String, glue : Array(String) = GLUE,
-                     @routes : Array(Route) = Translations.routes, @literals = [] of String, &@scope : Route -> Bool)
+                     @routes : Array(Route) = Translations.routes, @literals = [] of String,
+                     @unsent = {} of String => String, &@scope : Route -> Bool)
         @routes = @routes.reject { |route| glue.includes?(route.handler.name) }
-        unknown = @exclusions.keys - @routes.map(&.name)
+        unknown = (@exclusions.keys + @unsent.keys) - @routes.map(&.name)
         raise ArgumentError.new("exclusions sans route : #{unknown.join(", ")}") unless unknown.empty?
       end
 
@@ -590,7 +615,7 @@ module PartiduoUi
           action = htmx_action || attribute(attributes, "action").presence || page
           next unless internal?(action)
           route = route_for(action.partition('?')[0])
-          next if route.nil? || !in_scope?(route) || UNSENT.includes?(route.name)
+          next if route.nil? || !in_scope?(route) || UNSENT.includes?(route.name) || @unsent.has_key?(route.name)
           fields = form_fields(match[2])
           key = "#{route.name} #{fields.map(&.name).uniq!.sort!.join(',')}"
           next if @form_keys.includes?(key) || @form_count[route.name] >= FORMS_PER_ROUTE
@@ -731,6 +756,10 @@ end
 # Sonde des traductions (`PartiduoUi::Translations::Probe`) : chaque
 # recherche passe par `I18n::Catalog#translate`.
 class I18n::Catalog
+  private def fetch_translation(locale, key, count = nil, default = nil, ongoing_fallback = false)
+    PartiduoUi::Translations::Probe.quietly { previous_def }
+  end
+
   private def fetch_translation!(locale, key, count = nil, default = nil, ongoing_fallback = false)
     PartiduoUi::Translations::Probe.lookup(key.to_s, count, default) unless ongoing_fallback
     previous_def
