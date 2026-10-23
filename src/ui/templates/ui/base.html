@@ -47,6 +47,9 @@
           <label class="is-sr-only" for="pd-search">{% translate "ui.shell.search_label" %}</label>
           <input class="input" id="pd-search" name="q" type="search" placeholder="{% translate 'ui.shell.search_placeholder' %}" autocomplete="off" data-pd-search>
         </form>
+        {% if shell.language_url %}
+        <a class="button pd-lang" href="{{ shell.language_url }}" title="{% translate 'ui.shell.language_connect_title' %}">{% translate "ui.shell.language_connect" %} · {{ shell.locale|upcase }}</a>
+        {% else %}
         <form class="pd-lang" method="post" action="{% url 'language' %}">
           {% csrf_input %}
           <input type="hidden" name="next" value="{{ shell.current_path }}">
@@ -56,6 +59,7 @@
           </select></div>
           <button class="button" type="submit">{% translate "ui.shell.apply" %}</button>
         </form>
+        {% endif %}
         <details class="pd-user">
           <summary><span class="pd-avatar" aria-hidden="true">{{ shell.user_initials }}</span><span class="pd-user-name">{{ shell.user_name|default:shell.user_email }} · {% translate shell.user_role_key %}</span><span class="is-sr-only">{% translate "ui.shell.user_menu" %}</span></summary>
           <ul class="pd-user-menu">

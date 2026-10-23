@@ -88,6 +88,9 @@ module PartiduoUi
     property mode_target : String? = nil
     # Clé du libellé du raccourci de bascule.
     property mode_label : String? = nil
+    # Page du compte connect où se règle la langue d'une session ouverte
+    # par connect (D-UI-082) ; le sélecteur de langue est alors un lien.
+    property language_url : String? = nil
     property settings_url : String? = nil
     property settings_label : String = "ui.micro.settings.title"
     # Onglets de l'écran « Foyer » d'un dossier foyer, au-dessus du contenu
@@ -188,6 +191,7 @@ module PartiduoUi
         period_groups: period[:period_groups],
       )
       shell.simple = simple
+      shell.language_url = Partiduo::Api::Auth.connect_account_url if session.locale_from_connect
       shell.mode_target = SimpleMode.switch_target(request)
       shell.mode_target.try { |target| shell.mode_label = SimpleMode.switch_label(request, target) }
       if link = simple_module.try { |code| SimpleMode.settings_link(code, actor) }

@@ -32,7 +32,7 @@ src/
     ├── table.cr, form.cr, screen.cr  # listes triables, formulaires, consultations
     ├── handlers/        # handlers HTTP (reference/ : référentiel du lot 1)
     ├── templates/ui/    # gabarits (base.html, _icon.html…)
-    ├── locales/         # libellés d'écran fr, en, nl (ADR-005 D7)
+    ├── locales/         # libellés d'écran fr, en, nl, de, es, it, pt (ADR-005 D7)
     └── assets/ui/
         ├── css/         # bulma.min.css (1.0.4), theme.css, fonts.css, app.css
         ├── fonts/       # IBM Plex Sans et Plex Mono (woff2, SIL OFL 1.1)
@@ -132,7 +132,7 @@ Coquille de la maquette de référence (ADR-005 D5), gabarit `ui/base.html` :
 
 * *barre supérieure* : dossier (`Api::Core.settings`), exercice et période
   courants (en attente du contrat du lot 1), recherche globale (`/`),
-  langue (fr, en, nl), menu du compte (sécurité, à propos, déconnexion) ;
+  langue (fr, en, nl, de, es, it, pt), menu du compte (sécurité, à propos, déconnexion) ;
 * *menu latéral* : `Api::Modules.menu(acteur)` — rubriques du socle dans
   l'ordre de l'ADR-005, seuls les modules actifs et les entrées permises, puis
   les extensions (badge de leur code). Un nom de route du manifeste

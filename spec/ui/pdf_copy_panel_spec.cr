@@ -105,8 +105,8 @@ describe "Panneau « Canal d'émission » : copie PDF et dépôt (lot C)" do
     page.should_not contain(HTML.escape(I18n.t("ui.invoicing.download_original_archived")))
   end
 
-  it "a un libellé d'historique, en fr, en et nl, pour toute action tracée par la Facturation" do
-    %w[fr en nl].each do |locale|
+  it "a un libellé d'historique, dans chaque langue livrée, pour toute action tracée par la Facturation" do
+    Partiduo::LOCALES.each do |locale|
       I18n.with_locale(locale) do
         Inv::DOCUMENT_EVENT_ACTIONS.each do |action|
           I18n.t("ui.invoicing.events.#{action}", default: "").should_not be_empty

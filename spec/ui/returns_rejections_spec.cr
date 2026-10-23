@@ -294,7 +294,7 @@ describe "Paiements rejetés (D-INV3-012)" do
 
   it "libelle le rejet dans l'historique à comptabiliser" do
     I18n.with_locale("fr") { I18n.t("ui.history.events.payment_rejected").should eq("Rejet de règlement") }
-    %w[en nl].each do |locale|
+    Partiduo::LOCALES.reject("fr").each do |locale|
       I18n.with_locale(locale) { I18n.t("ui.invoicing.events.payment_rejected", default: "").should_not be_empty }
     end
   end

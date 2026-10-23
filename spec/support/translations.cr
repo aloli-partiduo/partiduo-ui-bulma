@@ -4,7 +4,7 @@ require "html"
 require "yaml"
 
 module PartiduoUi
-  # Contrôle des traductions (ADR-005 D7 : fr, en, nl), partagé par
+  # Contrôle des traductions (ADR-005 D7 : langues livrées, `Partiduo::LOCALES`), partagé par
   # l'interface, les extensions et la distribution, qui le requièrent par
   # `lib/partiduo-ui-bulma/spec/support/translations`.
   #
@@ -24,7 +24,7 @@ module PartiduoUi
   #   lien n'atteint fait échouer le contrôle, sauf exclusion motivée : une
   #   nouvelle page est ainsi couverte d'office.
   module Translations
-    LOCALES = %w[fr en nl]
+    LOCALES = Partiduo::LOCALES.map(&.to_s)
 
     # Marqueur rendu par crystal-i18n pour une clé absente
     # (`missing translation: en.ui.menu.x`).

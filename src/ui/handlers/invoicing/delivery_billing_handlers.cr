@@ -246,7 +246,7 @@ module PartiduoUi
       if outcome = result.value?
         message = I18n.t("invoicing.dispatch.#{outcome.action}", to: outcome.detail)
         flash[outcome.action.in?("email_missing", "email_failed", "send_denied") ? "warning" : "success"] =
-          "#{document_title(outcome.document)} : #{message}"
+          I18n.t("ui.forms.label_value", label: document_title(outcome.document), value: message)
       else
         flash["danger"] = result.errors.map { |error| fmt.message(error) }.join(" ")
       end

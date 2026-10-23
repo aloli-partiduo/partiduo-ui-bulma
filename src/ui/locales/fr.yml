@@ -18,6 +18,8 @@ fr:
       search_label: "Recherche"
       search_placeholder: "Rechercher un compte, une fiche, une pièce… (Ctrl+K)"
       language: "Langue"
+      language_connect: "Langue : compte connect"
+      language_connect_title: "Choisir la langue d'affichage dans votre compte connect"
       apply: "Appliquer"
       user_menu: "Menu du compte"
       unavailable: "bientôt disponible"
@@ -422,6 +424,7 @@ fr:
       sort_descending: "Trier par ordre décroissant"
       pages: "Pages"
     forms:
+      label_value: "%{label} : %{value}"
       actions: "Actions"
       active: "Active"
       inactive: "Inactive"

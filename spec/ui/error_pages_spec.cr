@@ -14,6 +14,10 @@ private TITLES = {
   "fr" => {404 => "Page introuvable", 400 => "Demande non valide", 403 => "Accès refusé", 500 => "Erreur du serveur"},
   "en" => {404 => "Page not found", 400 => "Bad request", 403 => "Access denied", 500 => "Server error"},
   "nl" => {404 => "Pagina niet gevonden", 400 => "Ongeldige aanvraag", 403 => "Toegang geweigerd", 500 => "Serverfout"},
+  "de" => {404 => "Seite nicht gefunden", 400 => "Ungültige Anfrage", 403 => "Zugriff verweigert", 500 => "Serverfehler"},
+  "es" => {404 => "Página no encontrada", 400 => "Solicitud no válida", 403 => "Acceso denegado", 500 => "Error del servidor"},
+  "it" => {404 => "Pagina non trovata", 400 => "Richiesta non valida", 403 => "Accesso negato", 500 => "Errore del server"},
+  "pt" => {404 => "Página não encontrada", 400 => "Pedido inválido", 403 => "Acesso recusado", 500 => "Erro do servidor"},
 }
 
 describe "Pages d'erreur de Marten" do
@@ -36,7 +40,8 @@ describe "Pages d'erreur de Marten" do
   end
 
   it "rend le refus CSRF d'un formulaire par une page « formulaire expiré » traduite" do
-    {"fr" => "Formulaire expiré", "en" => "Form expired", "nl" => "Formulier verlopen"}.each do |locale, title|
+    {"fr" => "Formulaire expiré", "en" => "Form expired", "nl" => "Formulier verlopen", "de" => "Formular abgelaufen",
+     "es" => "Formulario caducado", "it" => "Modulo scaduto", "pt" => "Formulário expirado"}.each do |locale, title|
       client = Marten::Spec::Client.new(disable_request_forgery_protection: false)
       response = client.post("/login", data: {"email" => "alice@example.com", "password" => "x"},
         content_type: "application/x-www-form-urlencoded", headers: {"Accept-Language" => locale})

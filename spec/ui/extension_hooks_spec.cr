@@ -59,7 +59,9 @@ describe "Tuiles des extensions (Extensions.tile, D-HOOK-001)" do
     PartiduoUi::Extensions.tiles(Books.system, fmt, Set{"UIPROBE"}).should be_empty
     ExtensionHooksProbe.calls.should eq(1)
 
-    tiles = PartiduoUi::Extensions.tiles(Books.system, fmt, Set{"UITEST"})
+    # Libellé dans la langue active : le français, quelle que soit celle
+    # qu'une spec précédente a laissée.
+    tiles = I18n.with_locale("fr") { PartiduoUi::Extensions.tiles(Books.system, fmt, Set{"UITEST"}) }
     tiles.map(&.label).should eq(["Tuile de test"])
     tiles.first.value.should eq(fmt.amount(BigDecimal.new("1234.5")))
     tiles.first.module_code.should eq("UITEST")

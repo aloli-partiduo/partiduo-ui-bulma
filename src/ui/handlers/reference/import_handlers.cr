@@ -246,7 +246,7 @@ module PartiduoUi
              end
       messages = row.errors.map do |error|
         label = error.base? ? nil : view.field(error.field).try(&.title)
-        label ? "#{label} : #{fmt.message(error)}" : fmt.message(error)
+        label ? I18n.t("ui.forms.label_value", label: label, value: fmt.message(error)) : fmt.message(error)
       end
       cells = (0...view.columns.size).map { |index| row.cells[index]? || "" }
       PreviewRow.new(row.line, I18n.t("core.imports.actions.#{row.action.code}"), tone, row.reference, cells, messages)

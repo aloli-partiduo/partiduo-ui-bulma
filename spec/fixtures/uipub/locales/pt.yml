@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+pt:
+  uipub:
+    module:
+      name: "Extensão pública de teste"
+    permissions:
+      batch:
+        approve: "Aprovar um lote de teste"

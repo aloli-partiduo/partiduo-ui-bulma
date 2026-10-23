@@ -18,6 +18,8 @@ en:
       search_label: "Search"
       search_placeholder: "Search an account, a card, a document… (Ctrl+K)"
       language: "Language"
+      language_connect: "Language: connect account"
+      language_connect_title: "Choose the display language in your connect account"
       apply: "Apply"
       user_menu: "Account menu"
       unavailable: "coming soon"
@@ -422,6 +424,7 @@ en:
       sort_descending: "Sort descending"
       pages: "Pages"
     forms:
+      label_value: "%{label}: %{value}"
       actions: "Actions"
       active: "Active"
       inactive: "Inactive"

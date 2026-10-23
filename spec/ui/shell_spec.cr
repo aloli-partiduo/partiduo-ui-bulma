@@ -129,7 +129,7 @@ describe "Coquille de l'écran (maquette, ADR-005 D5)" do
     menu.should contain(%(href="/account/security"))
     menu.should contain(%(<a href="/account/preferences">))
     menu.should contain("/assets/ui/icons/sprite.svg#sliders-horizontal")
-    %w[fr en nl].each do |locale|
+    Partiduo::LOCALES.each do |locale|
       browser.post("/language", {"locale" => locale, "next" => "/account/preferences"})
       page = browser.get("/account/preferences").html
       page.should contain(%(<html lang="#{locale}">))

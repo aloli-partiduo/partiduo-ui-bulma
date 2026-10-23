@@ -18,6 +18,8 @@ nl:
       search_label: "Zoeken"
       search_placeholder: "Zoek een rekening, een fiche, een stuk… (Ctrl+K)"
       language: "Taal"
+      language_connect: "Taal: connect-account"
+      language_connect_title: "Kies de weergavetaal in uw connect-account"
       apply: "Toepassen"
       user_menu: "Accountmenu"
       unavailable: "binnenkort beschikbaar"
@@ -422,6 +424,7 @@ nl:
       sort_descending: "Aflopend sorteren"
       pages: "Pagina's"
     forms:
+      label_value: "%{label}: %{value}"
       actions: "Acties"
       active: "Actief"
       inactive: "Inactief"

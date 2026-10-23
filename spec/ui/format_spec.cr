@@ -87,6 +87,38 @@ describe PartiduoUi::Format do
     end
   end
 
+  it "formate montants, taux et dates en allemand, espagnol, italien et portugais, quel que soit le pays" do
+    value = BigDecimal.new("1234567.505")
+    day = Time.utc(2026, 9, 7)
+    rate = BigDecimal.new("5.5")
+    {
+      "de" => {"1.234.567,51", "07.09.2026", "5,5\u00A0%"},
+      "es" => {"1.234.567,51", "07/09/2026", "5,5\u00A0%"},
+      "it" => {"1.234.567,51", "07/09/2026", "5,5%"},
+      "pt" => {"1\u00A0234\u00A0567,51", "07/09/2026", "5,5%"},
+    }.each do |locale, (amount, date, percent)|
+      %w[FR BE].each do |country|
+        format = PartiduoUi::Format.new(locale, country)
+        {locale, country, format.amount(value), format.date(day), format.percent(rate)}.should eq({locale, country, amount, date, percent})
+      end
+    end
+    PartiduoUi::Format.new("pt", "BR").amount(value).should eq("1.234.567,51")
+  end
+
+  it "relit les nombres et les dates saisis en allemand, espagnol, italien et portugais" do
+    %w[de es it pt].each do |locale|
+      format = PartiduoUi::Format.new(locale, "FR")
+      %w[1234 1234.5 0.0625 1234567.891234 -42.1].each do |text|
+        value = BigDecimal.new(text)
+        format.parse_decimal(format.input_number(value)).should eq(value)
+        format.parse_decimal(format.amount(value, 6)).should eq(value)
+      end
+      format.parse_decimal("1.5").should be_nil
+      format.parse_date(format.date(Time.utc(2026, 9, 7))).should eq(Time.utc(2026, 9, 7))
+      format.parse_short_date("12.3", Time.utc(2026, 9, 1)).should eq(Time.utc(2026, 3, 12))
+    end
+  end
+
   it "lit une valeur décimale enregistrée (point décimal)" do
     PartiduoUi::Format.canonical_decimal("1234.5").should eq(BigDecimal.new("1234.5"))
     PartiduoUi::Format.canonical_decimal("1,5").should be_nil

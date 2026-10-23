@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+de:
+  uitest:
+    module:
+      name: "Testerweiterung"
+    menu:
+      uitest_home: "Testseite"
+    permissions:
+      page:
+        view: "Testseite anzeigen"
+        edit: "Testseite bearbeiten"
+    tile:
+      label: "Testkachel"
+      sub: "Testuntertitel"
+    document:
+      action: "Testaktion"

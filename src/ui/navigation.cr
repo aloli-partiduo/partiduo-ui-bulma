@@ -41,18 +41,65 @@ module PartiduoUi
     end
   end
 
-  # Langue de l'interface : le cookie de langue (choix explicite) prime, puis
-  # la langue de l'utilisateur connecté, puis celle du navigateur (middleware
-  # I18n de Marten).
+  # Langue de l'interface.
+  #
+  # . Session ouverte par connect (D-UI-082) : la langue du compte connect,
+  #   reprise à chaque connexion ; si le compte n'en a pas, la première
+  #   langue livrée que demande le navigateur, puis la langue du dossier,
+  #   puis le français. Ni le cookie ni la langue enregistrée dans le dossier
+  #   ne la contredisent.
+  # . Autre session, ou visiteur : le cookie de langue (choix explicite,
+  #   valable pour la visite), la langue de l'utilisateur connecté, la
+  #   première langue livrée que demande le navigateur (middleware I18n de
+  #   Marten), puis la langue configurée du dossier (`default_locale`,
+  #   D-UI-080) au lieu du français de Marten.
   module Locale
     def self.activate_for(request : Marten::HTTP::Request, current : Current) : Nil
-      return if request.cookies[Marten.settings.i18n.locale_cookie_name]?
-      locale = current.session.try(&.locale)
-      I18n.activate(locale) if locale && Partiduo::LOCALES.includes?(locale)
+      cookie = request.cookies[Marten.settings.i18n.locale_cookie_name]?
+      header = request.headers["Accept-Language"]?.to_s
+      chosen = resolve(current.session, cookie, header) { Partiduo::Api::Core.default_locale }
+      I18n.activate(chosen) if chosen
+      nil
+    end
+
+    # Langue à activer, `nil` pour garder celle du middleware de Marten
+    # (cookie de langue livrée, ou langue livrée du navigateur). Le bloc donne
+    # la langue configurée du dossier ; il n'est appelé que si elle sert.
+    def self.resolve(session : Partiduo::Api::Auth::SessionView?, cookie : String?, header : String,
+                     & : -> String) : String?
+      if session && session.locale_from_connect
+        return session.locale if available.includes?(session.locale)
+        return browser_locale(header) || yield
+      end
+      return if available.includes?(cookie.to_s)
+      locale = session.try(&.locale)
+      return locale if locale && available.includes?(locale)
+      return if browser_locale(header)
+      yield
     end
 
     def self.available : Array(String)
       Partiduo::LOCALES.map(&.to_s)
+    end
+
+    # Première langue livrée que demande le navigateur, `nil` sinon. Mêmes
+    # règles que le middleware de Marten : étiquettes par priorité
+    # décroissante, langue de base (`de-DE` → `de`), arrêt au joker `*`.
+    def self.browser_locale(header : String) : String?
+      tags = header.downcase.split(',').each_with_index.to_a.compact_map do |(part, index)|
+        tag, _, parameters = part.partition(';')
+        tag = tag.strip
+        next if tag.empty?
+        priority = parameters.match(/q\s*=\s*([0-9.]+)/).try(&.[1].to_f?) || 1.0
+        {tag, priority, index}
+      end
+      tags.sort_by! { |(_, priority, index)| {-priority, index} }
+      tags.each do |(tag, _, _)|
+        return if tag == "*"
+        base = tag.split('-').first
+        return base if available.includes?(base)
+      end
+      nil
     end
   end
 

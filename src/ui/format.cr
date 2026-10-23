@@ -12,6 +12,7 @@ module PartiduoUi
     record Convention, decimal : String, group : String, date : String, percent : String
 
     NARROW_NBSP = " "
+    NBSP        = " "
 
     # Langue seule (pays sans règle propre) puis paires langue-pays.
     CONVENTIONS = {
@@ -23,6 +24,11 @@ module PartiduoUi
       "en-BE" => Convention.new(",", ".", "%d/%m/%Y", "%"),
       "en-FR" => Convention.new(",", NARROW_NBSP, "%d/%m/%Y", "%"),
       "en-US" => Convention.new(".", ",", "%m/%d/%Y", "%"),
+      "de"    => Convention.new(",", ".", "%d.%m.%Y", "#{NBSP}%"),
+      "es"    => Convention.new(",", ".", "%d/%m/%Y", "#{NBSP}%"),
+      "it"    => Convention.new(",", ".", "%d/%m/%Y", "%"),
+      "pt"    => Convention.new(",", NBSP, "%d/%m/%Y", "%"),
+      "pt-BR" => Convention.new(",", ".", "%d/%m/%Y", "%"),
     }
 
     getter locale : String
@@ -36,7 +42,8 @@ module PartiduoUi
     end
 
     # Montant à `decimals` décimales (arrondi au demi supérieur), groupé :
-    # `1 234,50` (fr), `1.234,50` (nl-BE), `1,234.50` (en).
+    # `1 234,50` (fr), `1.234,50` (nl-BE, de, es, it), `1,234.50` (en),
+    # `1 234,50` (pt).
     def amount(value : BigDecimal?, decimals : Int32 = 2, group : Bool = true) : String
       return "" if value.nil?
       rounded = value.round(decimals, mode: :ties_away)
