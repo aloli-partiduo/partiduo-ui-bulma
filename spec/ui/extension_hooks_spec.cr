@@ -97,6 +97,9 @@ describe "Tuiles des extensions (Extensions.tile, D-HOOK-001)" do
     page.should contain(%(href="/liberal/receipts"))
     tile_of(page).should_not be_nil
 
+    # Micro-entreprise et profession libérale ne s'activent pas ensemble
+    # (D-AMD-038 du cœur) : l'une remplace l'autre.
+    Partiduo::Api::Modules.deactivate(Books.system, "LIBERAL").success?.should be_true
     Partiduo::Api::Modules.activate(Books.system, "MICRO").success?.should be_true
     Partiduo::Api::Micro.load_defaults(Books.system)
     page = browser.get("/").html

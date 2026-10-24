@@ -381,10 +381,14 @@ describe "Écrans de la profession libérale (ADR-007 D6)" do
     end
   end
 
-  it "compose le menu réduit selon le module : la micro-entreprise l'emporte si les deux sont actifs" do
+  it "compose le menu réduit selon le module ; micro-entreprise et profession libérale ne sont jamais actives ensemble" do
     liberal_books
     actor = Books.system
     PartiduoUi::SimpleMode.flavor(actor).try(&.module_code).should eq("LIBERAL")
+    # Deux régimes d'imposition distincts (D-AMD-038 du cœur) : l'une
+    # remplace l'autre.
+    Partiduo::Api::Modules.activate(actor, "MICRO").error_keys.should eq(["modules.errors.activation.incompatible_with"])
+    Partiduo::Api::Modules.deactivate(actor, "LIBERAL").success?.should be_true
     Partiduo::Api::Modules.activate(actor, "MICRO").success?.should be_true
     PartiduoUi::SimpleMode.flavor(actor).try(&.module_code).should eq("MICRO")
   end
