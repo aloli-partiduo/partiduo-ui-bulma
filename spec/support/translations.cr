@@ -177,13 +177,55 @@ module PartiduoUi
       # compilé, spec), hors de crystal-i18n, du contrat d'erreurs et de cette
       # sonde.
       private def self.origin : String
-        caller.find do |frame|
-          (!frame.starts_with?('/') || frame.includes?("partiduo")) && !frame.includes?("/i18n/") && !frame.includes?(PROBE_FILE) &&
-            !frame.includes?("api/result.cr") && !frame.includes?("api/field_error.cr")
-        end.try(&.strip) || "?"
+        caller.each do |frame|
+          place = place(frame)
+          return place unless place.nil?
+        end
+        "?"
       rescue
         # Pile illisible (programme de specs remplacé par une autre suite).
         "?"
+      end
+
+      # Ligne de pile située : `fichier:ligne:colonne in 'méthode'`.
+      LOCATED = /\A(\S+:\d+(?::\d+)?)\s+in\s/
+
+      # Symbole d'une ligne de pile sans informations de débogage
+      # (`crystal spec --no-debug`, comme en CI) : `binaire in 'symbole'`.
+      SYMBOL = /\sin\s+'(.+)'\s*\z/
+
+      # Emplacement que garde le symbole d'un bloc compilé sans informations
+      # de débogage (`~procProc(Nil)@spec/…_spec.cr:44`) ; le symbole d'une
+      # méthode n'en a aucun.
+      BLOCK_LOCATION = /@(\S+:\d+)\z/
+
+      # Symboles de la mécanique de recherche, jamais l'origine d'une
+      # recherche : pile elle-même, crystal-i18n, cette sonde, contrat
+      # d'erreurs (`Api::Result.failure`, `Api::FieldError`).
+      MACHINERY = {"caller", "Exception::CallStack", "I18n::", "PartiduoUi::Translations::Probe",
+                   "Partiduo::Api::Result", "Partiduo::Api::FieldError"}
+
+      # Origine que désigne une ligne de pile, ou `nil` si elle appartient à
+      # la mécanique de recherche (ou à la bibliothèque standard).
+      #
+      # Avec les informations de débogage, la ligne cite son fichier : elle
+      # est rendue telle quelle. Sans elles, seul le symbole est connu : il
+      # est rendu, ou, pour un bloc, l'emplacement qu'il garde ; une
+      # recherche faite par le corps d'une spec (`it do … end`, un bloc)
+      # reste ainsi reconnue (`spec?`), et celle du code reste rapportée,
+      # désignée par sa méthode, au lieu de `?`.
+      def self.place(frame : String) : String?
+        frame = frame.strip
+        if located = frame.match(LOCATED)
+          file = located[1]
+          return if file.starts_with?('/') && !file.includes?("partiduo")
+          return if file.includes?("/i18n/") || file.includes?(PROBE_FILE) ||
+                    file.includes?("api/result.cr") || file.includes?("api/field_error.cr")
+          frame
+        elsif symbol = frame.match(SYMBOL).try(&.[1])
+          return if MACHINERY.any? { |prefix| symbol.starts_with?(prefix) }
+          symbol.match(BLOCK_LOCATION).try(&.[1]) || symbol
+        end
       end
 
       # Défauts relevés, un par ligne, avec leur premier appelant.
