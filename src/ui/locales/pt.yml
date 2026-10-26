@@ -555,7 +555,7 @@ pt:
         one: "Importar apenas as linhas aceites: %{count} linha recusada será excluída"
         other: "Importar apenas as linhas aceites: %{count} linhas recusadas serão excluídas"
       line: "Linha"
-      action: "Seguimento"
+      action: "Resultado"
       reference: "Referência"
       reasons: "Motivos"
       column: "Coluna %{number}"
@@ -566,7 +566,7 @@ pt:
       title: "Arquivo dos documentos"
       intro: "Todos os anexos dos lançamentos do período, num ficheiro ZIP, com um índice (código interno, data, diário, documento, descrição, impressão digital)."
       from: "De"
-      to: "A"
+      to: "Até"
       ledger: "Diário"
       all_ledgers: "Todos os diários"
       download: "Transferir"
@@ -820,7 +820,7 @@ pt:
       pick: "Conta ou terceiro"
       pick_placeholder: "Nome, código de ficha ou número de conta"
       from: "De"
-      to: "A"
+      to: "Até"
       open_only: "Apenas não conciliadas"
       show: "Mostrar"
       intro: "Escolha uma conta ou um terceiro: saldo, montante em dívida, vencido, antiguidade de saldos e movimentos."
@@ -1107,7 +1107,7 @@ pt:
         filter: "Filtrar as guias a faturar"
         all_customers: "Todos os clientes"
         delivered_from: "Entregues de"
-        delivered_to: "a"
+        delivered_to: "até"
         apply: "Filtrar"
         notes: "Guias de remessa e de devolução a retomar"
         select: "Seleção"
@@ -1230,7 +1230,7 @@ pt:
           bank_account: "Conta bancária"
           pdf_copy_enabled: "Acrescentar ao envio pela plataforma uma cópia PDF"
           pdf_copy_from: "Cópia PDF: de"
-          pdf_copy_until: "Cópia PDF: a"
+          pdf_copy_until: "Cópia PDF: até"
           monthly_billing_mode: "Faturas recapitulativas de fim do mês"
       layouts:
         intro: "Aspeto dos PDF: cores, cabeçalho e rodapé. As menções obrigatórias e os montantes não dependem dele."
@@ -1337,7 +1337,7 @@ pt:
     reports:
       account_from: "Da conta"
       account_prefix: "Contas que começam por"
-      account_to: "À conta"
+      account_to: "Até à conta"
       all_ledger_kinds: "Todos os tipos de diários"
       all_ledgers: "Todos os diários"
       anomalies: "Saldos em sentido contrário ao seu tipo"
@@ -1487,7 +1487,7 @@ pt:
       csv_name: declaracoes-iva
       customer: Cliente
       date_from: De (facultativo)
-      date_to: A (facultativo)
+      date_to: Até (facultativo)
       dates_help: 'Limites de um exercício desfasado (CA12); vazios: os do período.'
       declared: Declarado
       default_ledger: Primeiro diário de operações diversas
@@ -1734,7 +1734,7 @@ pt:
       post_from: "Da rubrica"
       post_ledger: "Razão da rubrica"
       post_title: "Rubrica %{code}"
-      post_to: "À rubrica"
+      post_to: "Até à rubrica"
       post_updated: "Rubrica %{code} alterada."
       posts: "Rubricas"
       posts_count: "Rubricas"
@@ -2117,9 +2117,9 @@ pt:
       locale: "Idioma"
       name: "Nome"
       new: "Novo utilizador"
-      new_intro: "O utilizador recebe um convite por e-mail; escolhe ele próprio a sua passkey ou a sua palavra-passe."
+      new_intro: "O utilizador recebe um convite por e-mail; escolhe ele próprio a sua chave de acesso ou a sua palavra-passe."
       no_profile: "Nenhum perfil"
-      passkeys: "Passkeys"
+      passkeys: "Chaves de acesso"
       profile: "Perfil"
       reinvite: "Novo convite"
       reinvite_confirm: "Enviar um novo convite a este utilizador?"
@@ -2167,7 +2167,7 @@ pt:
       users: "Utilizadores"
     company:
       address: "Contactos"
-      domain_help: "Nome de anfitrião do dossier, usado nas ligações dos e-mails e nas passkeys."
+      domain_help: "Nome de anfitrião do dossier, usado nas ligações dos e-mails e nas chaves de acesso."
       edit: "Editar a empresa"
       identity: "Identidade"
       instance: "Dossier e autenticação"
@@ -2446,7 +2446,7 @@ pt:
         contributions: "Contribuições estimadas"
         status: "Estado"
         missing_rates: "Taxas ausentes dos parâmetros, contadas a zero: %{codes}."
-        declared_on: "Declarada em %{date} %{reference}"
+        declared_on: "Declarado em %{date} %{reference}"
       tax_return:
         title: "Declaração de rendimentos %{year}"
         intro: "Montantes a transcrever na declaração complementar de rendimentos (2042-C-PRO, declaração francesa), em euros inteiros."
@@ -2966,13 +2966,13 @@ pt:
       cancelled: "Pedido retirado."
       reauth_then_approve: "Confirmar a minha identidade para aprovar"
       reauth_title: "Confirmar a identidade"
-      reauth_help: "Aprovar uma operação sensível exige uma autenticação forte com menos de %{minutes} minutos: utilize a sua passkey ou o código da aplicação de autenticação. Um código de recuperação não basta."
+      reauth_help: "Aprovar uma operação sensível exige uma autenticação forte com menos de %{minutes} minutos: utilize a sua chave de acesso ou o código da aplicação de autenticação. Um código de recuperação não basta."
       reauth_connect: "Confirmar com a minha conta Partiduo"
-      reauth_passkey: "Confirmar com a minha passkey"
+      reauth_passkey: "Confirmar com a minha chave de acesso"
       reauth_totp: "Confirmar com este código"
       reauth_enroll: "Nenhum método de autenticação forte está registado na sua conta."
       reauth_security: "Segurança da conta"
-      reauth_too_weak: "Este código não basta: a sua conta exige uma passkey."
+      reauth_too_weak: "Este código não basta: a sua conta exige uma chave de acesso."
       reauthenticated: "Identidade confirmada: já pode aprovar."
       back: "Voltar ao pedido"
       decision:
